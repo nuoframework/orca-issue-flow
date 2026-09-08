@@ -91,6 +91,18 @@ overlaps actually cost you something.
 Deep and adversarial only run when the diff earns them — a risky path, a size threshold, or
 the judge asking for them. A small change is four agents and two light reviews.
 
+**And one that does not vote.** A red gate hands the implementer thousands of lines of which
+forty matter — and it does not do it once, because fix rounds share the implementer's
+terminal, so each round's log stacks up in the same context and round one's still reads as
+current when you are on round three. A fixed failure gets fixed twice. So the **reader**, a
+cheap model, extracts the failures and nothing else: verbatim, only the stack frames inside
+the repo, with line numbers back into the log — which stays on disk, so the worst case is one
+targeted read rather than anything lost.
+
+It is deliberately not one of the nine. It has no opinion, and nothing downstream inherits
+its taste; that is exactly why it can share a model family with any other role without
+costing the flow the independence the rest of it is built on.
+
 <br>
 
 ## Configuration
@@ -107,6 +119,9 @@ deep_review_paths:              # always get the deep reviewer, whatever the dif
   - auth*
   - "**/migrations/**"
   - "**/crypto*"
+
+context:
+  digest_gate_logs_over: 200    # above this, the verify log goes through roles.reader
 
 roles:
   plan_b:
@@ -143,6 +158,7 @@ roles:
 ├── 12-gaps.md             ─┘
 ├── 13-verdict.md          the plan you approved
 ├── 20-gates.log           what the machine said, not what a model claimed
+├── 20-gates-summary.md    the failures only, when the log outgrew a context window
 ├── 31-review-*.md         one file per reviewer
 ├── 32-findings.md         deduplicated, ordered by severity
 └── 40-validation.md       criteria table + a plain-language summary for you
@@ -159,6 +175,13 @@ A full run is nine agent invocations plus fix rounds. That is worth it where bei
 expensive — auth, migrations, billing, tenant isolation, anything you would want a second
 engineer to look at. It is not worth it for a typo, and the tiering means a small diff never
 pays for the deep and adversarial passes.
+
+Where the cost is worth attacking is the input nobody chose to send. A verify log is mostly
+noise that looks like signal — passing lines, coverage tables, stack frames through
+`node_modules` — and it is the one big blob in the run that a machine produced
+deterministically rather than a person wrote. Routing it through the reader keeps it out of
+the windows that are actually expensive, and out of the terminal where it would otherwise
+pile up round after round. Set `context.digest_gate_logs_over: 0` to turn that off.
 
 <br>
 

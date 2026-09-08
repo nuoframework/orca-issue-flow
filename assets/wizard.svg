@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="903" viewBox="0 0 940 903" role="img" aria-label="The npx orca-issue-flow wizard running in a terminal">
+  <rect width="940" height="903" rx="14" fill="#020617"/>
+  <rect x="0.5" y="0.5" width="939" height="902" rx="14" fill="none" stroke="#1e293b"/>
+  <path d="M0 46 H940" stroke="#1e293b"/>
+  <circle cx="26" cy="26" r="6" fill="#fb7185"/><circle cx="48" cy="26" r="6" fill="#fbbf24"/><circle cx="70" cy="26" r="6" fill="#34d399"/>
+  <text x="96" y="31" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#475569">npx orca-issue-flow</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+    <text x="34" y="92" fill="#34d399">┌</text>
+    <text x="41.8" y="92" fill="#e2e8f0" xml:space="preserve">  orca-issue-flow</text>
+    <text x="182.2" y="92" fill="#94a3b8" xml:space="preserve">  multi-agent issue workflow for Orca</text>
+    <text x="34" y="113" fill="#475569">│</text>
+    <text x="34" y="134" fill="#34d399">●</text>
+    <text x="41.8" y="134" fill="#e2e8f0" xml:space="preserve">  Repository: ~/code/acme-api</text>
+    <text x="34" y="155" fill="#475569">│</text>
+    <text x="34" y="176" fill="#34d399">◇</text>
+    <text x="41.8" y="176" fill="#e2e8f0" xml:space="preserve">  Where should the skill be installed?</text>
+    <text x="34" y="197" fill="#475569">│</text>
+    <text x="41.8" y="197" fill="#94a3b8" xml:space="preserve">  .agents/skills  (Orca / OpenCode / shared)</text>
+    <text x="34" y="218" fill="#475569">│</text>
+    <text x="34" y="239" fill="#34d399">◇</text>
+    <text x="41.8" y="239" fill="#e2e8f0" xml:space="preserve">  Which branch does every issue branch off?</text>
+    <text x="34" y="260" fill="#475569">│</text>
+    <text x="41.8" y="260" fill="#94a3b8" xml:space="preserve">  origin/beta</text>
+    <text x="34" y="281" fill="#475569">│</text>
+    <text x="34" y="302" fill="#34d399">◇</text>
+    <text x="41.8" y="302" fill="#e2e8f0" xml:space="preserve">  Command that must be green before review and before the PR</text>
+    <text x="34" y="323" fill="#475569">│</text>
+    <text x="41.8" y="323" fill="#94a3b8" xml:space="preserve">  pnpm run verify</text>
+    <text x="34" y="344" fill="#475569">│</text>
+    <text x="34" y="365" fill="#34d399">◇</text>
+    <text x="41.8" y="365" fill="#e2e8f0" xml:space="preserve">  Which issue tracker do you work from?</text>
+    <text x="34" y="386" fill="#475569">│</text>
+    <text x="41.8" y="386" fill="#94a3b8" xml:space="preserve">  Linear</text>
+    <text x="34" y="407" fill="#475569">│</text>
+    <text x="34" y="428" fill="#34d399">◇</text>
+    <text x="41.8" y="428" fill="#e2e8f0" xml:space="preserve">  Paths that always earn the deep review</text>
+    <text x="34" y="449" fill="#475569">│</text>
+    <text x="41.8" y="449" fill="#94a3b8" xml:space="preserve">  auth*, **/migrations/**, **/crypto*</text>
+    <text x="34" y="470" fill="#475569">│</text>
+    <text x="34" y="491" fill="#fb7185">◆</text>
+    <text x="41.8" y="491" fill="#e2e8f0" xml:space="preserve">  Plan B</text>
+    <text x="112.0" y="491" fill="#94a3b8" xml:space="preserve">  — the second independent plan. Pick a different</text>
+    <text x="34" y="512" fill="#475569">│</text>
+    <text x="41.8" y="512" fill="#94a3b8" xml:space="preserve">  family from Plan A — two correlated plans are worth one.</text>
+    <text x="34" y="533" fill="#475569">│</text>
+    <text x="34" y="554" fill="#475569">│</text>
+    <text x="41.8" y="554" fill="#e2e8f0" xml:space="preserve">  Agent</text>
+    <text x="34" y="575" fill="#475569">│</text>
+    <text x="41.8" y="575" fill="#94a3b8" xml:space="preserve">  ○ Claude Code   </text>
+    <text x="190.0" y="575" fill="#475569" xml:space="preserve">worker-start --agent claude</text>
+    <text x="34" y="596" fill="#475569">│</text>
+    <text x="41.8" y="596" fill="#34d399" xml:space="preserve">  ● Codex         </text>
+    <text x="190.0" y="596" fill="#475569" xml:space="preserve">worker-start --agent codex</text>
+    <text x="34" y="617" fill="#475569">│</text>
+    <text x="41.8" y="617" fill="#94a3b8" xml:space="preserve">  ○ Grok          </text>
+    <text x="190.0" y="617" fill="#475569" xml:space="preserve">worker-start --agent grok</text>
+    <text x="34" y="638" fill="#475569">│</text>
+    <text x="41.8" y="638" fill="#94a3b8" xml:space="preserve">  ○ OpenCode      </text>
+    <text x="190.0" y="638" fill="#475569" xml:space="preserve">terminal, any model it exposes</text>
+    <text x="34" y="659" fill="#475569">│</text>
+    <text x="41.8" y="659" fill="#94a3b8" xml:space="preserve">  ○ Custom command…</text>
+    <text x="34" y="680" fill="#475569">└</text>
+    <text x="34" y="722" fill="#34d399">◇</text>
+    <text x="41.8" y="722" fill="#e2e8f0" xml:space="preserve">  Installed</text>
+    <text x="34" y="743" fill="#475569">│</text>
+    <text x="41.8" y="743" fill="#34d399" xml:space="preserve">  + .orca-flow.yml</text>
+    <text x="34" y="764" fill="#475569">│</text>
+    <text x="41.8" y="764" fill="#34d399" xml:space="preserve">  + .agents/skills/orca-issue-flow/SKILL.md</text>
+    <text x="34" y="785" fill="#475569">│</text>
+    <text x="41.8" y="785" fill="#34d399" xml:space="preserve">  + .agents/skills/orca-issue-flow/references/</text>
+    <text x="34" y="806" fill="#475569">│</text>
+    <text x="41.8" y="806" fill="#34d399" xml:space="preserve">  + .gitignore  </text>
+    <text x="174.4" y="806" fill="#475569" xml:space="preserve">.orca-run/</text>
+    <text x="34" y="827" fill="#475569">│</text>
+    <text x="34" y="848" fill="#34d399">└</text>
+    <text x="41.8" y="848" fill="#94a3b8" xml:space="preserve">  Docs: github.com/nuoframework/orca-issue-flow</text>
+  </g>
+</svg>

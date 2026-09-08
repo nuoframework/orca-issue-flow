@@ -1,47 +1,26 @@
-# orca-issue-flow
+<div align="center">
 
-A multi-agent workflow for taking one issue from brief to pull request inside
-[Orca](https://orca.computer), installed as an agent skill.
+<img src="assets/hero.svg" alt="orca-issue-flow — one issue, nine agents, two gates you control" width="100%">
 
-Instead of handing an issue to a single agent and hoping, it runs a panel:
+<br>
 
-```
-  context + acceptance criteria          ← you
-        │
-        ├─ Plan A ──┐                    two independent plans, in parallel,
-        └─ Plan B ──┤                    neither able to see the other
-                    ▼
-              Gap hunter                 a third family: only what both missed
-                    ▼
-                 Judge                   merges them into one final plan
-                    ▼
-        ╔═══════════════════╗
-        ║  YOU APPROVE      ║            gate 1 — nothing is built before this
-        ╚═══════════════════╝
-                    ▼
-             Implementer                 the only worker that touches product code
-                    ▼
-           Deterministic gates           your verify command, run by the machine
-                    ▼
-            Tiered review                2 light, + deep, + adversarial when earned
-                    ▼
-             Validation                  criteria table + a plain-language summary
-                    ▼
-        ╔═══════════════════╗
-        ║  YOU APPROVE      ║            gate 2 — nothing reaches GitHub before this
-        ╚═══════════════════╝
-                    ▼
-            push · PR · close out
-```
+![license](https://img.shields.io/badge/license-MIT-F0A63C?style=flat-square&labelColor=1F1A15)
+![node](https://img.shields.io/badge/node-%E2%89%A518.17-F0A63C?style=flat-square&labelColor=1F1A15)
+![install](https://img.shields.io/badge/install-npx%20orca--issue--flow-F0A63C?style=flat-square&labelColor=1F1A15)
+![runs on](https://img.shields.io/badge/runs%20on-Orca-F0A63C?style=flat-square&labelColor=1F1A15)
 
-Two properties make it worth the tokens:
+</div>
 
-- **Two human gates.** The orchestrator stops on the plan and stops again before it pushes.
-  GitHub stays read-only for the first ten phases — no `push`, no `pr create`, no comments.
-- **Independence between roles.** The planners never see each other, the gap hunter comes
-  from a third model family, and the adversarial reviewer is asked to assume everyone else
-  is wrong. Consensus between agents that think alike is worthless; this is set up to avoid
-  buying it.
+<br>
+
+Handing an issue to one agent and hoping is a coin flip you cannot audit. **orca-issue-flow**
+runs a panel instead: two planners that never see each other, a third model that hunts for
+what both missed, a judge that turns the three into one plan, an implementer that follows it
+literally, and reviewers that are not allowed to share the implementer's blind spots.
+
+It stops twice and asks you — once on the plan, once before anything reaches GitHub.
+
+<br>
 
 ## Install
 
@@ -49,12 +28,19 @@ Two properties make it worth the tokens:
 npx orca-issue-flow
 ```
 
-The wizard detects your base branch, package manager and verify script, asks what it cannot
-work out, and lets you pick the agent and model for each of the nine roles. It writes:
+<div align="center">
+<img src="assets/wizard.svg" alt="The wizard detecting the repo, asking for the base branch and verify command, and letting you pick the agent behind each role" width="820">
+</div>
 
-- `.orca-flow.yml` at the repo root — everything project-specific, meant to be edited
-- `.agents/skills/orca-issue-flow/` (or `.claude/skills/…`) — the skill itself
-- `.orca-run/` added to `.gitignore` — where each run leaves its artefacts
+The wizard reads what it can from the repo — base branch, package manager, verify script,
+convention files, tracker — asks about the rest, and lets you choose the agent and model
+behind each of the nine roles. It writes three things:
+
+| | |
+|---|---|
+| `.orca-flow.yml` | Everything project-specific. Meant to be edited. |
+| `.agents/skills/orca-issue-flow/` | The skill itself. `.claude/skills/` also offered. |
+| `.gitignore` | Gains `.orca-run/`, where each run leaves its artefacts. |
 
 Then, from a session in your main checkout:
 
@@ -62,65 +48,137 @@ Then, from a session in your main checkout:
 run issue ABC-123
 ```
 
-## What you need
+Not on npm yet — until it is, `npx github:nuoframework/orca-issue-flow` installs the same thing.
 
-- [Orca](https://orca.computer) with the `orca` CLI on your PATH, and the `orchestration`
-  skill available (`orca skills get orchestration`).
-- At least two agent CLIs Orca can launch, from different model families. The defaults
-  assume Claude Code, Codex, Grok and OpenCode; any mix works — see
-  [Choosing the roster](skill/references/configuration.md#choosing-the-roster).
-- `gh`, authenticated, for the last two phases.
-- Linear, GitHub Issues, or nothing — the flow adapts.
+<br>
 
-## Configuration
+## How a run goes
 
-Everything lives in `.orca-flow.yml`, documented in
-[`skill/references/configuration.md`](skill/references/configuration.md). The parts you will
-actually revisit:
+<div align="center">
+<img src="assets/flow.png" alt="Lane diagram of the run: your brief, two parallel planners, gap hunter and judge, your plan gate, implementation with a fix-round lane, deterministic gates, tiered review, your delivery gate, and push and PR" width="720">
+<br>
+<sub>Generated with <a href="https://github.com/tt-a1i/archify">Archify</a> from <a href="assets/src/flow.workflow.json"><code>assets/src/flow.workflow.json</code></a> — the interactive version is <a href="assets/flow.html"><code>assets/flow.html</code></a>.</sub>
+</div>
 
-```yaml
-verify:
-  command: pnpm verify        # a red gate stops the flow; make this what CI runs
+Two properties are doing the work here, and both are easy to lose:
 
-deep_review_paths:            # these always get the deep reviewer, whatever the diff size
-  - auth*
-  - "**/migrations/**"
+**The gates are real.** The orchestrator has no path to `git push`, `gh pr create` or a
+tracker comment for the first ten phases. It stops at the plan and stops again at delivery,
+and it stops by not having anywhere to go — not by being asked nicely.
 
-roles:
-  plan_a:
-    launch: orca orchestration worker-start --agent claude --model claude-fable-5-1 --effort medium
-    fallback: orca orchestration worker-start --agent claude --model claude-opus-4-8
-```
+**The roles are independent.** Two planners from the same model family produce one plan with
+extra steps, and the judge has nothing to arbitrate. A reviewer from the implementer's family
+inherits the implementer's assumptions and approves them. Consensus between agents that think
+alike is not evidence; the roster exists to avoid buying it. The
+[configuration guide](skill/references/configuration.md#choosing-the-roster) says which
+overlaps actually cost you something.
 
-Re-run `npx orca-issue-flow` any time to redo the wizard.
+<br>
 
 ## The nine roles
 
 | Role | Does | Never does |
 |---|---|---|
-| Plan A | An independent implementation plan | See plan B |
-| Plan B | The second independent plan | See plan A |
-| Gap hunter | Only what neither plan considered, with evidence | Propose a plan |
-| Judge | One self-sufficient final plan out of A, B and the gaps | Touch code |
-| Implementer | Follows the approved plan, commits, runs the gates | Push |
-| Light review ×2 | Cheap passes: hygiene, consistency, docs, sanity | Modify files |
-| Deep review | Security, correctness, edge cases, test quality | Modify files |
-| Adversarial review | Tries to break it, assuming the others are wrong | Modify files |
+| **Plan A** | An independent implementation plan | Sees plan B |
+| **Plan B** | The second independent plan | Sees plan A |
+| **Gap hunter** | Only what neither plan considered, each point with evidence | Proposes a plan |
+| **Judge** | One self-sufficient final plan out of A, B and the gaps | Touches code |
+| **Implementer** | Follows the approved plan, commits, runs the gates | Pushes |
+| **Light review** ×2 | Hygiene, consistency, docs, "does it do what the plan said?" | Modifies files |
+| **Deep review** | Security, correctness, edge cases, whether the tests would fail | Modifies files |
+| **Adversarial review** | Tries to break it, assuming every other reviewer is wrong | Modifies files |
 
-Each writes to its own file in `.orca-run/`, so a finished run leaves an audit trail: both
-plans, the gaps, the verdict, the gate log, every review, and the final validation.
+Deep and adversarial only run when the diff earns them — a risky path, a size threshold, or
+the judge asking for them. A small change is four agents and two light reviews.
 
-## Cost
+<br>
 
-A full run is nine agent invocations plus fix rounds. It is aimed at issues where being
-wrong is expensive — auth, migrations, billing, anything multi-tenant — not at typo fixes.
-For small changes, the deep and adversarial reviewers simply do not trigger, and the run is
-four agents plus two light reviews.
+## Configuration
 
-## Prior art
+Everything project-specific lives in `.orca-flow.yml`, documented in full in
+[`skill/references/configuration.md`](skill/references/configuration.md). The parts you will
+actually revisit:
 
-This grew out of a working orchestration flow in a private production repo, generalised so
-the project-specific parts live in config rather than in the prompts.
+```yaml
+verify:
+  command: pnpm verify          # a red gate stops the flow — make this what CI runs
+
+deep_review_paths:              # always get the deep reviewer, whatever the diff size
+  - auth*
+  - "**/migrations/**"
+  - "**/crypto*"
+
+roles:
+  plan_b:
+    launch:   orca orchestration worker-start --agent codex
+    fallback: orca orchestration worker-start --agent claude --model claude-opus-4-8
+```
+
+`launch` is a command fragment, not a fixed enum — anything Orca can start, including
+`orca terminal create --command "…"` for a CLI the wizard has never heard of. Re-run
+`npx orca-issue-flow` any time to redo the wizard.
+
+<br>
+
+## What you need
+
+- **[Orca](https://orca.computer)** with the `orca` CLI on your `PATH` and the orchestration
+  skill available (`orca skills get orchestration`).
+- **At least two agent CLIs** Orca can launch, from different model families. The defaults
+  assume Claude Code, Codex, Grok and OpenCode; any mix works.
+- **`gh`**, authenticated — used only in the last two phases.
+- **A tracker, or none.** Linear and GitHub Issues are wired in; with `tracker: none` you
+  paste the brief into the chat and the flow skips close-out.
+
+<br>
+
+## What a run leaves behind
+
+```
+.orca-run/
+├── 00-context.md          what the issue asks, which code it touches
+├── 01-criteria.md         numbered, each saying how it gets checked
+├── 10-plan-A.md           ─┐
+├── 11-plan-B.md            ├─ the disagreement, preserved
+├── 12-gaps.md             ─┘
+├── 13-verdict.md          the plan you approved
+├── 20-gates.log           what the machine said, not what a model claimed
+├── 31-review-*.md         one file per reviewer
+├── 32-findings.md         deduplicated, ordered by severity
+└── 40-validation.md       criteria table + a plain-language summary for you
+```
+
+Git-ignored by default. When someone asks in six months why the code looks like this, the
+answer is on disk — including the plan that lost.
+
+<br>
+
+## Cost, honestly
+
+A full run is nine agent invocations plus fix rounds. That is worth it where being wrong is
+expensive — auth, migrations, billing, tenant isolation, anything you would want a second
+engineer to look at. It is not worth it for a typo, and the tiering means a small diff never
+pays for the deep and adversarial passes.
+
+<br>
+
+## Prior art and credits
+
+This grew out of a working orchestration flow in a private production repo. Generalising it
+mostly meant moving the project's assumptions out of the prompts and into config, where they
+belong.
+
+The lane diagram is built with **[Archify](https://github.com/tt-a1i/archify)**, which
+compiles a typed JSON description into the artifact and refuses to render a layout where
+edges cross unrelated nodes or labels collide. To rebuild it after editing the source:
+
+```bash
+npx skills add tt-a1i/archify -g
+archify validate workflow assets/src/flow.workflow.json
+archify render   workflow assets/src/flow.workflow.json assets/flow.html --quality showcase
+```
+
+<br>
 
 ## License
 

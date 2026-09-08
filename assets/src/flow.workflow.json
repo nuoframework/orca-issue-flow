@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "orca-issue-flow",
+    "subtitle": "One issue, brief to pull request — with two gates only you can open",
+    "output": "assets/flow.html",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "human-gates",
+        "label": "The two gates",
+        "focus": [
+          "gate_plan",
+          "gate_ship",
+          "judge",
+          "ship"
+        ],
+        "note": "Nothing is built before the first, and nothing reaches GitHub before the second."
+      },
+      {
+        "id": "panel",
+        "label": "Why two plans",
+        "focus": [
+          "plan_a",
+          "plan_b",
+          "gaps",
+          "judge"
+        ],
+        "note": "Two planners that never see each other, then a third model hunting what both missed."
+      },
+      {
+        "id": "fix-loop",
+        "label": "When something is red",
+        "focus": [
+          "verify",
+          "review",
+          "fix_round",
+          "implement"
+        ],
+        "note": "A red gate or a blocking finding goes back to the implementer, never forward."
+      }
+    ]
+  },
+  "lanes": [
+    {
+      "id": "brief",
+      "label": "You · the brief"
+    },
+    {
+      "id": "lane_a",
+      "label": "Planner A"
+    },
+    {
+      "id": "lane_b",
+      "label": "Planner B"
+    },
+    {
+      "id": "panel",
+      "label": "Gaps + judge"
+    },
+    {
+      "id": "gate1",
+      "label": "You · plan gate"
+    },
+    {
+      "id": "build",
+      "label": "Implementation"
+    },
+    {
+      "id": "fixes",
+      "label": "Fix rounds",
+      "variant": "exception"
+    },
+    {
+      "id": "review",
+      "label": "Review"
+    },
+    {
+      "id": "gate2",
+      "label": "You · delivery gate"
+    },
+    {
+      "id": "delivery",
+      "label": "Delivery"
+    }
+  ],
+  "phases": [
+    {
+      "id": "design",
+      "label": "Design",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "decide",
+      "label": "Decide",
+      "fromCol": 3,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "deliver",
+      "label": "Build + deliver",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "context",
+    "plan_a",
+    "gaps",
+    "judge",
+    "gate_plan",
+    "implement",
+    "verify",
+    "review",
+    "gate_ship",
+    "ship"
+  ],
+  "nodes": [
+    {
+      "id": "context",
+      "lane": "brief",
+      "col": 0,
+      "type": "frontend",
+      "label": "Brief",
+      "sublabel": "context + criteria",
+      "tag": "you write these"
+    },
+    {
+      "id": "plan_a",
+      "lane": "lane_a",
+      "col": 1,
+      "type": "backend",
+      "label": "Plan A",
+      "sublabel": "its own strategy",
+      "tag": "never sees B"
+    },
+    {
+      "id": "plan_b",
+      "lane": "lane_b",
+      "col": 1,
+      "type": "backend",
+      "label": "Plan B",
+      "sublabel": "another family",
+      "tag": "never sees A"
+    },
+    {
+      "id": "gaps",
+      "lane": "panel",
+      "col": 2,
+      "type": "backend",
+      "label": "Gap hunter",
+      "sublabel": "what both missed",
+      "tag": "third family"
+    },
+    {
+      "id": "judge",
+      "lane": "panel",
+      "col": 3,
+      "type": "backend",
+      "label": "Judge",
+      "sublabel": "one plan of three"
+    },
+    {
+      "id": "gate_plan",
+      "lane": "gate1",
+      "col": 3,
+      "type": "security",
+      "label": "Approve plan",
+      "sublabel": "nothing is built yet",
+      "tag": "human gate"
+    },
+    {
+      "id": "implement",
+      "lane": "build",
+      "col": 4,
+      "type": "cloud",
+      "label": "Implementer",
+      "sublabel": "follows it literally",
+      "tag": "only writer"
+    },
+    {
+      "id": "fix_round",
+      "lane": "fixes",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Fix round",
+      "sublabel": "same worker",
+      "tag": "capped"
+    },
+    {
+      "id": "verify",
+      "lane": "build",
+      "col": 5,
+      "type": "security",
+      "label": "Gates",
+      "sublabel": "your verify command",
+      "tag": "blocking"
+    },
+    {
+      "id": "review",
+      "lane": "review",
+      "col": 5,
+      "type": "backend",
+      "label": "Tiered review",
+      "sublabel": "2 light + more"
+    },
+    {
+      "id": "gate_ship",
+      "lane": "gate2",
+      "col": 5,
+      "type": "security",
+      "label": "Approve push",
+      "sublabel": "summary in hand",
+      "tag": "human gate"
+    },
+    {
+      "id": "ship",
+      "lane": "delivery",
+      "col": 5,
+      "type": "external",
+      "label": "push · PR",
+      "sublabel": "the merge stays yours"
+    }
+  ],
+  "edges": [
+    {
+      "from": "context",
+      "to": "plan_a"
+    },
+    {
+      "from": "context",
+      "to": "plan_b"
+    },
+    {
+      "from": "plan_a",
+      "to": "gaps"
+    },
+    {
+      "from": "plan_b",
+      "to": "gaps"
+    },
+    {
+      "from": "gaps",
+      "to": "judge",
+      "variant": "emphasis"
+    },
+    {
+      "from": "judge",
+      "to": "gate_plan",
+      "label": "verdict",
+      "variant": "emphasis",
+      "route": "drop",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "gate_plan",
+      "to": "implement",
+      "variant": "security"
+    },
+    {
+      "from": "implement",
+      "to": "verify",
+      "variant": "emphasis"
+    },
+    {
+      "from": "verify",
+      "to": "review"
+    },
+    {
+      "from": "review",
+      "to": "gate_ship",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gate_ship",
+      "to": "ship",
+      "variant": "security"
+    },
+    {
+      "from": "verify",
+      "to": "fix_round",
+      "label": "red",
+      "variant": "security",
+      "role": "error",
+      "labelDx": -30
+    },
+    {
+      "from": "review",
+      "to": "fix_round",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "from": "fix_round",
+      "to": "implement",
+      "label": "rework",
+      "variant": "dashed",
+      "role": "return",
+      "labelAt": [
+        500,
+        787
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Two gates that hold",
+      "items": [
+        "The orchestrator has no path to push or open a PR before you approve",
+        "It stops on the plan, and stops again on the delivery",
+        "The merge itself is never automated"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Independence, on purpose",
+      "items": [
+        "The planners never read each other, so the judge has a real disagreement to settle",
+        "The gap hunter comes from a third family and proposes nothing of its own",
+        "The adversarial reviewer assumes every other reviewer is wrong"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "What a run leaves behind",
+      "items": [
+        "Both plans, the gaps and the verdict stay on disk under .orca-run/",
+        "The gate log is what the machine said, not what a model claimed",
+        "Every reviewer writes its own file, deduplicated into one findings list"
+      ]
+    }
+  ]
+}

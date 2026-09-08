@@ -54,6 +54,13 @@ export function renderConfig(cfg) {
   L.push("# regression, not a feature.");
   L.push(`language: ${yamlString(cfg.language)}`);
   L.push("");
+  L.push("# What you expect to be running the flow. A note to yourself, not a launcher: the");
+  L.push("# orchestrator is whatever session you invoke the skill from, so no config can");
+  L.push("# start it. The skill reads this at step 0 and says something once if you are");
+  L.push("# driving twelve phases from a small model. `orca-issue-flow roles` never touches");
+  L.push("# this line — it tells you what the new pack would suggest and leaves the choice.");
+  L.push(`orchestrator: ${yamlString(cfg.orchestrator ?? "a frontier model (Opus, Fable)")}`);
+  L.push("");
   L.push("# --- Gates ----------------------------------------------------------------");
   L.push("");
   L.push("# Must be green before review, and again before the PR. Red gate = no review.");
@@ -123,11 +130,6 @@ export function renderRolesSection(cfg) {
   L.push("#");
   L.push("# Re-pick this roster any time with `npx orca-issue-flow roles`. It rewrites this");
   L.push("# section only and leaves everything above untouched.");
-  L.push("");
-  L.push("# The orchestrator is whatever session you run the skill from, so this is a note");
-  L.push("# to yourself, not a launcher. The skill checks it at step 0 and says something");
-  L.push("# if you are running a twelve-phase orchestration from a small model.");
-  L.push(`orchestrator: ${yamlString(cfg.orchestrator ?? "a frontier model (Opus, Fable)")}`);
   L.push("");
   L.push("roles:");
   for (const role of cfg.roles) {

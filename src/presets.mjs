@@ -209,42 +209,64 @@ export const ADVERSARIAL_TOPIC_SUGGESTIONS = [
  * same thing: everything reached through OpenCode would otherwise read as one family, and
  * the whole roster would look independent while two roles ran the same model.
  */
-const OPENCODE_FAMILIES = [
-  [/^opencode\/glm/, "zhipu"],
-  [/^opencode\/gemini/, "google"],
-  [/^opencode\/grok/, "xai"],
-  [/^opencode\/kimi/, "moonshot"],
-  [/^opencode\/(gpt|o[0-9])/, "openai"],
-  [/^opencode\/claude/, "anthropic"],
+const MODEL_FAMILIES = [
+  [/^glm/, "zhipu"],
+  [/^gemini/, "google"],
+  [/^grok/, "xai"],
+  [/^kimi/, "moonshot"],
+  [/^muse/, "meta"],
+  [/^(llama|codellama)/, "meta"],
+  [/^deepseek/, "deepseek"],
+  [/^qwen/, "qwen"],
+  [/^minimax/, "minimax"],
+  [/^mistral|^codestral/, "mistral"],
+  [/^command/, "cohere"],
+  [/^(gpt|o[0-9])/, "openai"],
+  [/^claude/, "anthropic"],
 ];
 
+/**
+ * The real vendor behind a choice. `LAUNCHERS[].family` describes the CLI, which is not the
+ * same thing: everything reached through a gateway would otherwise read as one family, and
+ * a roster running two models from one vendor would look independent while it was not.
+ *
+ * The provider prefix is stripped before matching, so `opencode/glm-5.3` and
+ * `opencode-go/glm-5.3` land on the same vendor. This table will always be incomplete —
+ * which is why an unresolved family is reported, never silently skipped.
+ */
 export function familyOf(choice) {
   if (!choice) return null;
   if (choice.raw) return null; // a hand-written command: we cannot know, so we do not guess
-  if (choice.launcher === "opencode") {
-    // No model means "whatever the CLI defaults to", which we genuinely cannot resolve.
-    // Saying "opencode" here would let it pass as a family of its own and quietly satisfy
-    // every independence check it is compared against.
-    if (!choice.model) return "opencode:unknown";
-    for (const [pattern, family] of OPENCODE_FAMILIES) {
-      if (pattern.test(choice.model)) return family;
+  const launcher = findLauncher(choice.launcher);
+  if (launcher?.kind === LAUNCHER_KINDS.terminal) {
+    if (!choice.model) return "unknown";
+    const name = choice.model.includes("/") ? choice.model.slice(choice.model.lastIndexOf("/") + 1) : choice.model;
+    for (const [pattern, family] of MODEL_FAMILIES) {
+      if (pattern.test(name)) return family;
     }
-    return "opencode:unknown";
+    return "unknown";
   }
-  return findLauncher(choice.launcher)?.family ?? null;
+  return launcher?.family ?? null;
 }
 
-/**
- * The independence rules from the configuration guide, as code. Returns one line per
- * overlap that actually costs something — the wizard shows these, and the packs are
- * checked against them so the package never ships a roster that contradicts its own README.
- *
- * `roles` is a map of role key → choice. The reader is exempt: it has no opinion.
- */
+const isUnknown = (f) => !f || f === "unknown";
+
 export function checkIndependence(roles) {
   const f = (key) => familyOf(roles[key]);
   const warnings = [];
-  const known = (...keys) => keys.every((k) => f(k) && !String(f(k)).endsWith(":unknown"));
+  const known = (...keys) => keys.every((k) => !isUnknown(f(k)));
+
+  // Report what could not be checked BEFORE reporting what was. A roster that comes back
+  // clean because half of it was unresolvable is the worst outcome this function can have:
+  // the owner reads silence as a pass.
+  const unresolved = Object.keys(roles).filter(
+    (k) => k !== "reader" && roles[k] && isUnknown(f(k)),
+  );
+  if (unresolved.length) {
+    warnings.push(
+      `Cannot determine the model family for: ${unresolved.join(", ")}. The rules below were NOT checked for those roles — treat this roster as unverified, not as approved. Name an explicit model, or add the vendor to MODEL_FAMILIES in src/presets.mjs.`,
+    );
+  }
 
   if (known("plan_a", "plan_b") && f("plan_a") === f("plan_b")) {
     warnings.push(
@@ -254,6 +276,12 @@ export function checkIndependence(roles) {
   if (known("gaps", "plan_a") && (f("gaps") === f("plan_a") || f("gaps") === f("plan_b"))) {
     warnings.push(
       `The gap hunter is ${f("gaps")}, same as a planner. Its job is to see what the planners missed, which it cannot do sharing their priors.`,
+    );
+  }
+  if (known("judge", "plan_a") && (f("judge") === f("plan_a") || f("judge") === f("plan_b"))) {
+    const side = f("judge") === f("plan_a") ? "Plan A" : "Plan B";
+    warnings.push(
+      `The judge is ${f("judge")}, the same family as ${side}. It is asked to arbitrate between the two plans, and it will find the one that reasons like it does more persuasive.`,
     );
   }
   const reviewers = ["review_light_1", "review_light_2", "review_deep", "review_adversarial"];
@@ -273,16 +301,16 @@ export function checkIndependence(roles) {
   return warnings;
 }
 
-
 /**
  * Ready-made rosters. The axis is not really price — it is how much a mistake costs you on
  * the issues you point this at. Cheap models plan and review worse; that is fine when the
  * work is easy to undo and expensive when it is not.
  *
  * Two positions are held across all three packs. The judge is never the cheapest thing in
- * the roster, because it writes the plan that actually gets built. And the light reviewers
- * never share the implementer's family, because a reviewer that thinks like the implementer
- * approves the implementer.
+ * the roster, because it writes the plan that actually gets built — and it never shares a
+ * family with a planner, because it would find the plan that reasons like it does more
+ * persuasive. And no reviewer shares the implementer's family, because a reviewer that
+ * thinks like the implementer approves the implementer.
  *
  * `orchestrator` is a recommendation, not a launcher: the orchestrator is whatever session
  * you run the skill from. The skill reads it at step 0 and says something if you are well
@@ -299,7 +327,7 @@ export const ROSTER_PACKS = [
       plan_b: { launcher: "opencode", model: "opencode/glm-5.3" },
       gaps: { launcher: "opencode", model: "opencode/grok-4.6" },
       judge: { launcher: "opencode", model: "opencode/kimi-k3" },
-      implementer: { launcher: "claude", model: "claude-fable-5-1", effort: "low" },
+      implementer: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
       review_light_1: { launcher: "opencode", model: "opencode/glm-5.3" },
       review_light_2: { launcher: "opencode", model: "opencode/grok-4.6" },
       review_deep: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
@@ -323,12 +351,12 @@ export const ROSTER_PACKS = [
       plan_a: { launcher: "claude", model: "claude-opus-5", effort: "high" },
       plan_b: { launcher: "codex" },
       gaps: { launcher: "grok" },
-      judge: { launcher: "claude", model: "claude-opus-5", effort: "high" },
+      judge: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
       implementer: { launcher: "codex" },
       review_light_1: { launcher: "claude", model: "claude-opus-4-8" },
       review_light_2: { launcher: "opencode", model: "opencode/glm-5.3" },
       review_deep: { launcher: "claude", model: "claude-opus-5", effort: "high" },
-      review_adversarial: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
+      review_adversarial: { launcher: "opencode", model: "opencode/kimi-k3" },
       reader: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
     },
   },

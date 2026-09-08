@@ -14,6 +14,20 @@ every run and stops if it is missing.
 | `docs_dirs` | Read for context in phase 1, checked again in phase 9. |
 | `changelog` | Path, or `null` if the project has none. |
 
+## Orchestrator
+
+```yaml
+orchestrator: a frontier model (Opus)
+```
+
+A note to yourself, not a launcher: the orchestrator is whatever session you run the skill
+from, so no config can start it. The skill reads this at step 0 and says something once if
+you are driving twelve phases of dispatch and synthesis from a small model.
+
+It sits up here rather than with the roster, so `npx orca-issue-flow roles` never
+overwrites it. Changing packs prints what the new one would suggest and leaves your line
+alone.
+
 ## Language
 
 ```yaml
@@ -99,24 +113,22 @@ which is why the section is last in the file.
 | **Balanced** | The default | Strong planners and judge, cheap hygiene passes |
 | **Frontier** | Auth, migrations, billing, tenant isolation | Costs the most; nothing in the roster is a compromise |
 
-Two positions hold across all three. The judge is never the cheapest thing in the roster,
-because it writes the plan that actually gets built. And no light reviewer shares the
-implementer's family, because a reviewer that thinks like the implementer approves the
-implementer.
+Two positions hold across all three. The judge is never the cheapest thing in the roster —
+it writes the plan that actually gets built — and it never shares a family with a planner,
+because it would find the plan that reasons like it does the more persuasive one. And no
+reviewer shares the implementer's family, because a reviewer that thinks like the
+implementer approves the implementer.
 
 Every pack is checked against the independence rules below before it ships, and so is
 anything you assemble by hand — the wizard tells you which overlaps cost you something and
 lets you go back.
 
-### `orchestrator`
-
-```yaml
-orchestrator: a frontier model (Opus)
-```
-
-A note to yourself, not a launcher: the orchestrator is whatever session you run the skill
-from, so no config can start it. The skill reads this at step 0 and says something once if
-you are running twelve phases of dispatch and synthesis from a small model.
+**A roster it cannot resolve is reported, not passed.** Model families are matched on the
+model name with the provider prefix stripped, so `opencode/glm-5.3` and
+`opencode-go/glm-5.3` land on the same vendor. The table in `src/presets.mjs` will always
+be incomplete, so a name it does not recognise — or a role with no model at all — comes
+back as "cannot check", loudly, naming the roles it could not verify. Silence there would
+read as a pass, which is the one thing a checker must never do.
 
 ```yaml
 roles:
@@ -158,6 +170,9 @@ The flow's value does not come from any particular model. It comes from the role
   alike give you one plan with extra steps, and the judge has nothing to arbitrate.
 - **The gap hunter** should be a third family. Its whole job is to see what both planners
   missed, which it cannot do if it shares their priors.
+- **The judge** must differ from both planners. It exists to arbitrate between two plans,
+  and a judge sharing a planner's family finds that planner's reasoning the more natural of
+  the two.
 - **The reviewers** should not all match the implementer. A reviewer from the implementer's
   own family tends to accept the implementer's assumptions.
 - **The adversarial reviewer** must differ from every other reviewer. It is the only one

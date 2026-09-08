@@ -382,8 +382,18 @@ export async function reconfigureRoles(options = {}) {
     }
   }
 
-  writeFileSync(configPath, current.slice(0, cut) + renderRolesSection({ roles, orchestrator }), "utf8");
+  writeFileSync(configPath, current.slice(0, cut) + renderRolesSection({ roles }), "utf8");
   p.log.success(`Rewrote the roles section of ${CONFIG_NAME}. Everything above it is untouched.`);
+
+  // `orchestrator` lives above the cut, so this command cannot write it without breaking
+  // the promise it just made. Report the pack's view and let the owner decide.
+  const declared = current.slice(0, cut).match(/^orchestrator:\s*(.+)$/m)?.[1]?.trim();
+  if (declared && orchestrator && !declared.includes(orchestrator)) {
+    p.log.info(
+      `This roster suggests ${c.cyan(orchestrator)} at the wheel; ${CONFIG_NAME} still says ` +
+        `${c.cyan(declared)}. Left as it was — change it yourself if you agree.`,
+    );
+  }
   p.outro(`${c.dim("Docs:")} https://github.com/nuoframework/orca-issue-flow`);
 }
 

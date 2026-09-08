@@ -152,9 +152,13 @@ roles:
 The roster comes from one of three packs — **budget** for small reversible work, **balanced**
 by default, **frontier** for the issues where being wrong is expensive — or from picking a
 provider and model per role, ten questions deep. Either way the wizard checks the result
-against the independence rules and tells you which overlaps actually cost you something: two
-planners of one family, a gap hunter that shares the planners' priors, a reviewer wearing the
-implementer's blind spots.
+against the independence rules and names the overlaps that actually cost you something: two
+planners of one family, a gap hunter sharing the planners' priors, a judge that leans toward
+the plan reasoning like it does, a reviewer wearing the implementer's blind spots.
+
+It also tells you when it *cannot* check — an unrecognised model name, a role with no model
+at all. A roster that comes back clean because half of it was unresolvable is worse than no
+check, because you read the silence as a pass.
 
 Change your mind later without touching anything else you have edited:
 

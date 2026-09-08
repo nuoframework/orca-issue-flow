@@ -1,0 +1,42 @@
+{
+  "name": "orca-issue-flow",
+  "version": "0.1.0",
+  "description": "Multi-agent issue workflow for Orca: two independent plans, a gap hunter, a judge, tiered review and two human gates. Installs as an agent skill, configurable per role.",
+  "type": "module",
+  "bin": {
+    "orca-issue-flow": "bin/cli.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skill"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "keywords": [
+    "orca",
+    "agent-skill",
+    "claude-code",
+    "opencode",
+    "codex",
+    "multi-agent",
+    "orchestration",
+    "code-review",
+    "linear"
+  ],
+  "license": "MIT",
+  "author": "nuoframework",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuoframework/orca-issue-flow.git"
+  },
+  "homepage": "https://github.com/nuoframework/orca-issue-flow#readme",
+  "bugs": {
+    "url": "https://github.com/nuoframework/orca-issue-flow/issues"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "picocolors": "^1.1.1"
+  }
+}

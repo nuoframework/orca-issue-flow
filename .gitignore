@@ -1,0 +1,4 @@
+node_modules/
+.orca-run/
+*.log
+.DS_Store

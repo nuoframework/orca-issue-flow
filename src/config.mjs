@@ -1,0 +1,97 @@
+/**
+ * .orca-flow.yml writer. Hand-rolled so the package stays at two dependencies and the
+ * output keeps its comments — the file is meant to be edited by hand afterwards.
+ */
+
+const needsQuotes = (s) =>
+  s === "" ||
+  /^[\s]|[\s]$/.test(s) ||
+  /^[-?:,\[\]{}#&*!|>'"%@`]/.test(s) ||
+  /:\s/.test(s) ||
+  /\s#/.test(s) ||
+  /^(true|false|null|yes|no|on|off|~)$/i.test(s) ||
+  /^-?\d+(\.\d+)?$/.test(s);
+
+export function yamlString(value) {
+  const s = String(value);
+  if (!needsQuotes(s)) return s;
+  return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+function list(items, indent) {
+  if (!items || items.length === 0) return " []";
+  return "\n" + items.map((i) => `${indent}- ${yamlString(i)}`).join("\n");
+}
+
+export function renderConfig(cfg) {
+  const L = [];
+  L.push("# orca-issue-flow — project configuration");
+  L.push("# https://github.com/nuoframework/orca-issue-flow");
+  L.push("#");
+  L.push("# The skill reads this file at the start of every run. Edit it freely: change a");
+  L.push("# model, swap an agent, add a path that must trigger the deep review. Re-run");
+  L.push("# `npx orca-issue-flow` to redo the wizard.");
+  L.push("");
+  L.push("# --- Repository -----------------------------------------------------------");
+  L.push("");
+  L.push("# Branch every issue worktree is cut from, and the PR base.");
+  L.push(`base_branch: ${yamlString(cfg.base_branch)}`);
+  L.push(`pr_base: ${yamlString(cfg.pr_base)}`);
+  L.push("# Prefix for issue branches when the tracker does not supply a name.");
+  L.push(`branch_prefix: ${yamlString(cfg.branch_prefix)}`);
+  L.push("");
+  L.push("# Files carrying the project's rules. Every worker is told to read these first.");
+  L.push(`conventions_files:${list(cfg.conventions_files, "  ")}`);
+  L.push("");
+  L.push("# Docs the orchestrator reads for context, and checks at the end.");
+  L.push(`docs_dirs:${list(cfg.docs_dirs, "  ")}`);
+  L.push(`changelog: ${cfg.changelog ? yamlString(cfg.changelog) : "null"}`);
+  L.push("");
+  L.push("# --- Gates ----------------------------------------------------------------");
+  L.push("");
+  L.push("# Must be green before review, and again before the PR. Red gate = no review.");
+  L.push("verify:");
+  L.push(`  command: ${yamlString(cfg.verify.command)}`);
+  if (cfg.verify.ui_command) {
+    L.push("  # Run instead of the above when the diff touches UI.");
+    L.push(`  ui_command: ${yamlString(cfg.verify.ui_command)}`);
+  } else {
+    L.push("  ui_command: null");
+  }
+  L.push("");
+  L.push("# --- Issue tracker --------------------------------------------------------");
+  L.push("");
+  L.push("# linear | github | none");
+  L.push(`tracker: ${yamlString(cfg.tracker)}`);
+  L.push(`issue_prefix: ${cfg.issue_prefix ? yamlString(cfg.issue_prefix) : "null"}`);
+  L.push("");
+  L.push("# --- Review policy --------------------------------------------------------");
+  L.push("");
+  L.push("# A diff touching any of these always gets the deep review, whatever its size.");
+  L.push(`deep_review_paths:${list(cfg.deep_review_paths, "  ")}`);
+  L.push("# ...and so does any diff bigger than this many changed lines.");
+  L.push(`deep_review_lines: ${cfg.deep_review_lines}`);
+  L.push("");
+  L.push("# Subjects that additionally earn the adversarial reviewer.");
+  L.push(`adversarial_topics:${list(cfg.adversarial_topics, "  ")}`);
+  L.push("");
+  L.push("# Fix rounds before the orchestrator stops and escalates to you.");
+  L.push(`max_review_rounds: ${cfg.max_review_rounds}`);
+  L.push("");
+  L.push("# --- Roles ----------------------------------------------------------------");
+  L.push("#");
+  L.push("# `launch` is the command the orchestrator runs; it appends --task/--worktree/--json.");
+  L.push("# `fallback` is used when a model reports being at capacity or over its limit.");
+  L.push("# What matters is that the roles stay independent: two planners that think alike");
+  L.push("# produce one plan, and a reviewer sharing the implementer's family finds nothing.");
+  L.push("");
+  L.push("roles:");
+  for (const role of cfg.roles) {
+    L.push(`  ${role.key}:`);
+    L.push(`    label: ${yamlString(role.label)}`);
+    L.push(`    launch: ${yamlString(role.launch)}`);
+    L.push(`    fallback: ${role.fallback ? yamlString(role.fallback) : "null"}`);
+  }
+  L.push("");
+  return L.join("\n");
+}

@@ -10,6 +10,7 @@ import {
   ADVERSARIAL_TOPIC_SUGGESTIONS,
   DEEP_REVIEW_SUGGESTIONS,
   EFFORTS,
+  LAUNCHER_KINDS,
   LAUNCHERS,
   PHASE_ROLES,
   ROLES,
@@ -174,6 +175,14 @@ export async function init(options = {}) {
         ),
       );
 
+  const language = guard(
+    await p.text({
+      message: "Language for what you read — criteria, verdict, gate questions, validation",
+      placeholder: "English",
+      defaultValue: "English",
+    }),
+  );
+
   // ---------------------------------------------------------------- review policy
   const deepPaths = splitList(
     guard(
@@ -268,6 +277,7 @@ export async function init(options = {}) {
     conventions_files: conventionsFiles,
     docs_dirs: detect.detectDocsDirs(root),
     changelog: detect.detectChangelog(root),
+    language: language.trim() || "English",
     verify: { command: verifyCommand, ui_command: uiCommand },
     context: { digest_gate_logs_over: 200, raw_log_after_rounds: 2 },
     tracker,
@@ -302,6 +312,17 @@ export async function init(options = {}) {
   ];
   if (result.ignoreAdded) written.push(`${c.green("+")} .gitignore  ${c.dim("(.orca-run/)")}`);
   p.note(written.join("\n"), "Installed");
+
+  // A repo that ignores `.agents/` or `.claude/` swallows the skill without a word:
+  // the install succeeds, the file is on disk, and it never reaches a commit.
+  if (detect.isIgnoredByGit(root, result.skillTarget)) {
+    p.log.warn(
+      `${c.yellow(relative(root, result.skillTarget))} is ignored by git.\n` +
+        "The skill is on disk but nobody can commit it, so your teammates will not get\n" +
+        "it and a fresh clone will not have it. Add an exception to .gitignore:\n" +
+        c.cyan(`  !${relative(root, result.skillTarget)}/`),
+    );
+  }
 
   const example = issuePrefix ? `${issuePrefix}-123` : "ABC-123";
   p.note(
@@ -381,12 +402,15 @@ async function pickRole(role) {
         : model;
   }
 
-  if (role.default.agent) {
+  // Terminal CLIs can carry named agent profiles. Offer it, but never default to
+  // one: a roster that depends on a profile the package does not create fails on
+  // the first run, which is exactly what happened with the judge.
+  if (launcher.kind === LAUNCHER_KINDS.terminal) {
     choice.agent = guard(
       await p.text({
-        message: `Named agent profile for this role ${c.dim("(blank for none)")}`,
-        placeholder: role.default.agent,
-        defaultValue: role.default.agent,
+        message: `Named agent profile ${c.dim("(blank for none — you must have created it yourself)")}`,
+        placeholder: role.default.agent ?? "",
+        defaultValue: role.default.agent ?? "",
       }),
     ).trim();
   }

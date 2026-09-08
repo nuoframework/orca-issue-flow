@@ -62,9 +62,23 @@ Not on npm yet — until it is, `npx github:nuoframework/orca-issue-flow` instal
 
 Two properties are doing the work here, and both are easy to lose:
 
-**The gates are real.** The orchestrator has no path to `git push`, `gh pr create` or a
-tracker comment for the first ten phases. It stops at the plan and stops again at delivery,
-and it stops by not having anywhere to go — not by being asked nicely.
+**The gates are real, and it is worth being exact about what makes them real.** The
+orchestrator is told — in the first two of the skill's non-negotiable rules — that it has no
+path to `git push`, `gh pr create` or a tracker comment before phase 11, and that it stops at
+the plan and again at delivery. That is a rule, not a sandbox: an agent with a shell can
+always type the command. What the flow gives you instead is a rule narrow enough to audit.
+Every phase leaves its artefact under `.orca-run/`, so a run that jumped a gate shows up in
+what it failed to write.
+
+Hard enforcement wants a pre-tool hook, and a hook only binds agents whose runtime has one.
+The roster is deliberately multi-vendor, so that is an open gap, not a feature — better said
+plainly here than implied away.
+
+**Nobody fixes anything in passing.** A worker that finds an unrelated bug records it and
+carries on; it does not repair it. This sounds like tidiness and is not — the reviewers check
+the diff against a plan you approved, so every line beyond that plan is a line nobody can
+judge, and the run quietly stops being auditable. What gets found goes to
+`.orca-run/50-followups.md`, and becomes an issue only if you say so at the delivery gate.
 
 **The roles are independent.** Two planners from the same model family produce one plan with
 extra steps, and the judge has nothing to arbitrate. A reviewer from the implementer's family
@@ -112,6 +126,8 @@ Everything project-specific lives in `.orca-flow.yml`, documented in full in
 actually revisit:
 
 ```yaml
+language: Spanish               # what YOU read. Never the code, commits or PR body.
+
 verify:
   command: pnpm verify          # a red gate stops the flow — make this what CI runs
 
@@ -161,7 +177,8 @@ roles:
 ├── 20-gates-summary.md    the failures only, when the log outgrew a context window
 ├── 31-review-*.md         one file per reviewer
 ├── 32-findings.md         deduplicated, ordered by severity
-└── 40-validation.md       criteria table + a plain-language summary for you
+├── 40-validation.md       criteria table + a plain-language summary for you
+└── 50-followups.md        found on the way, deliberately not fixed
 ```
 
 Git-ignored by default. When someone asks in six months why the code looks like this, the

@@ -47,6 +47,13 @@ export function renderConfig(cfg) {
   L.push(`docs_dirs:${list(cfg.docs_dirs, "  ")}`);
   L.push(`changelog: ${cfg.changelog ? yamlString(cfg.changelog) : "null"}`);
   L.push("");
+  L.push("# Language for everything YOU read: the criteria, the verdict summary, the two");
+  L.push("# gate questions and the final validation. It does NOT govern the code, the");
+  L.push("# commit messages, the PR title and body, or code comments — those follow the");
+  L.push("# repo's own convention, and a Spanish commit in an English codebase is a");
+  L.push("# regression, not a feature.");
+  L.push(`language: ${yamlString(cfg.language)}`);
+  L.push("");
   L.push("# --- Gates ----------------------------------------------------------------");
   L.push("");
   L.push("# Must be green before review, and again before the PR. Red gate = no review.");

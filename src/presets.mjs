@@ -122,8 +122,8 @@ export const ROLES = [
     label: "Judge",
     why: "Merges A, B and the gaps into one self-sufficient final plan. This is what gets built.",
     phase: 4,
-    default: { launcher: "opencode", agent: "judge" },
-    fallback: { launcher: "opencode", model: "opencode/glm-5.3" },
+    default: { launcher: "opencode", model: "opencode/glm-5.3" },
+    fallback: { launcher: "claude", model: "claude-opus-5" },
   },
   {
     key: "implementer",

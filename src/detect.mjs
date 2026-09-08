@@ -134,3 +134,20 @@ export function listDir(path) {
     return [];
   }
 }
+
+/**
+ * Whether git would ignore a path. A repo that ignores `.agents/` swallows the skill
+ * silently: the installer reports success, the file is on disk, and nobody can commit it.
+ * `git check-ignore` exits 0 when the path IS ignored, which is why this reads inverted.
+ */
+export function isIgnoredByGit(root, path) {
+  try {
+    execFileSync("git", ["check-ignore", "-q", path], {
+      cwd: root,
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}

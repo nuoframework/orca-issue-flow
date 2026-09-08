@@ -14,6 +14,21 @@ every run and stops if it is missing.
 | `docs_dirs` | Read for context in phase 1, checked again in phase 9. |
 | `changelog` | Path, or `null` if the project has none. |
 
+## Language
+
+```yaml
+language: Spanish
+```
+
+Governs everything the owner reads: the acceptance criteria, the plain-language summary at
+the plan gate, both gate questions, the findings the orchestrator relays and the final
+validation.
+
+It governs nothing else, and the distinction is load-bearing. Code, identifiers, code
+comments, commit messages, branch names and the PR title and body follow the repo's own
+convention — which is usually English even on a team that does not work in it. A Spanish
+commit message in an English codebase is a regression that outlives the run.
+
 ## Gates
 
 | Key | Meaning |

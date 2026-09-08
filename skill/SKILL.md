@@ -31,6 +31,16 @@ Non-negotiable rules:
    `check --wait`, process the whole batch, release the terminal, and only then `--ack`.
 6. If a model returns "at capacity" or "usage limit", relaunch that task with the standby
    listed in the model table. Do not retry in a loop.
+7. **Nobody fixes anything in passing.** Every worker stays inside the issue. A bug, a
+   smell or a stale doc found on the way gets recorded, never repaired: the owner approved
+   a plan, and a diff that exceeds it is a diff the reviewers cannot check against anything.
+   Drive-by fixes go to `.orca-run/50-followups.md`, and become issues **only** when the
+   owner says so at the delivery gate — never during the run.
+8. **`config.language` governs what the owner reads** — the criteria, the verdict summary,
+   both gate questions, the findings you relay and the final validation. It governs nothing
+   else. Code, identifiers, code comments, commit messages, branch names and the PR title
+   and body follow the repo's own convention, which is usually English even when the owner
+   is not reading in it.
 
 ## Step 0 · Load the config
 
@@ -82,11 +92,21 @@ The reader is not one of the nine. It extracts, it does not judge, and nothing d
 inherits its taste — so it may share a family with any of them without costing the flow
 anything.
 
-A `launch` starting with `orca orchestration worker-start` is dispatched directly. One
-starting with `orca terminal create` needs the terminal dance instead: create it, wait for
-`tui-idle`, create the task, then `dispatch --task <id> --to <handle> --inject`. If
-`--inject` does not recognise the CLI, send the prompt with `terminal send` and read the
+**Every phase below has to branch on the shape of `launch`, and the examples only show one
+of the two.** Read the role's `launch` before you paste anything:
+
+- Starts with `orca orchestration worker-start` → dispatched directly. Append
+  `--task <id> --worktree $WT --json`.
+- Starts with `orca terminal create` → the terminal dance. Append `--worktree $WT --title
+  "<Role> · ISSUE"`, wait for `tui-idle`, create the task, then
+  `dispatch --task <id> --to <handle> --inject`. **Never append `--task` to a
+  `terminal create`** — it is not a flag it has.
+
+If `--inject` does not recognise the CLI, send the prompt with `terminal send` and read the
 result with `worker-read` / `terminal read` plus the output file.
+
+Which shape a role has is the owner's choice and it changes per repo, so an example showing
+`worker-start` does not mean that role is a worker in *your* config.
 
 If a model answers "at capacity" or "usage limit", relaunch that one task with
 `roles.<role>.fallback`. Do not retry in a loop, and do not silently swap in a different role.
@@ -100,8 +120,10 @@ orca linear issue ISSUE --full --json > /tmp/ISSUE.json   # title, description, 
 gh issue view <n> --json title,body,comments,labels > /tmp/ISSUE.json
 
 orca repo list --json                                      # <repoId>
+# The issue link flag follows config.tracker — they are different flags, not aliases:
+#   linear → --linear-issue ISSUE        github → --issue <number>        none → neither
 orca worktree create --repo id:<repoId> --name "ISSUE <short title>" \
-  --linear-issue ISSUE --base-branch <base> \
+  <issue-flag> --base-branch <base> \
   --parent-worktree "id:<repoId>::<main-checkout>" --json  # no --agent: leave it empty
 git -C <worktree> log --oneline -1                         # must be the HEAD of <base>
 git -C <worktree> branch -m <branch-name>                  # tracker's branch name, or config.branch_prefix + slug
@@ -138,6 +160,8 @@ otherwise paste them in chat).
 ```bash
 orca orchestration task-create --spec "<PLAN prompt, see references/prompts.md, output .orca-run/10-plan-A.md>" --json
 orca orchestration task-create --spec "<same prompt, output .orca-run/11-plan-B.md>" --json
+# Shown for worker-start launchers. If either role is `orca terminal create`, use the
+# terminal dance for that one instead — see "The roster" above.
 <launch:plan_a> --task <tA> --worktree $WT --json
 <launch:plan_b> --task <tB> --worktree $WT --json
 orca orchestration check --wait --types worker_done,escalation,question --timeout-ms 900000 --json
@@ -174,8 +198,19 @@ orca orchestration gate-create --task <tJ> \
   --options '["approve","changes","cancel"]' --json
 ```
 
-Write the owner a plain-language summary in chat (what will be done, what was discarded,
-what the risks are) plus the path to the verdict. **Stop here.** Continue only when the
+Then write the owner, in `config.language`, exactly these five lines in chat — you write
+them, not the judge, because you are the one who has seen A, B, the gaps and the verdict,
+and a worker summarising itself is not a summary:
+
+```
+What gets built:      <one sentence, no file paths>
+Why this and not that: <what was discarded and the reason>
+What it touches:      <areas in plain words — "login", not "src/auth/session.ts">
+What could go wrong:  <the accepted risks, or "nothing beyond the usual">
+Out of scope:         <what the run will NOT do, from the verdict's own section>
+```
+
+Then the path to `13-verdict.md` for anyone who wants the detail. **Stop here.** Continue only when the
 owner answers "approve" (in chat, or by resolving the gate:
 `orca orchestration gate-list --status open --json`). If they ask for changes, go back to
 the judge with their comments — new task, same terminal.
@@ -249,13 +284,19 @@ severity). Any `BLOCKS` or `SHOULD` → fix task for the implementer → phase 7
 
 `.orca-run/40-validation.md`: a table of criterion → how it was verified → result;
 differences between the verdict and the implementation (and whether they are justified);
-a summary of gates and reviews; and an **"Owner summary"** of ten lines in plain language
-(what was done, what changes for the user, what risk remains, what to decide). Check the
-changelog and the docs.
+a summary of gates and reviews; and an **"Owner summary"** of ten lines in
+`config.language` (what was done, what changes for the user, what risk remains, what to
+decide). Check the changelog and the docs.
+
+If `.orca-run/50-followups.md` has anything in it, list those items at the end of the Owner
+summary as *"found but not touched"*. They are the owner's call at the next gate — do not
+open issues for them and do not fix them now.
 
 ## Phase 10 · DELIVERY APPROVAL (gate 2)
 
-`gate-create` with "ISSUE: push and open the PR?" and paste the Owner summary into chat.
+`gate-create` with "ISSUE: push and open the PR?" (in `config.language`) and paste the Owner
+summary into chat. If there are follow-ups, ask in the same message whether to open issues
+for them — and open them only in phase 12, only for the ones the owner named.
 **Stop here** until you get the OK.
 
 ## Phase 11 · Delivery (first write to GitHub)
@@ -275,13 +316,23 @@ call.
 ## Phase 12 · Close-out
 
 ```bash
+# tracker == linear
 orca linear attach ISSUE --url <pr-url> --title "PR #<n>" --json
 orca linear comment add ISSUE --body "<Owner summary + PR link + green checks>" --json
 orca linear save-issue ISSUE --state "In Review" --json
+
+# tracker == github — the PR body already links the issue, so this adds the summary
+gh issue comment <n> --body "<Owner summary + PR link + green checks>"
+# and, if the repo uses them, the label that means "waiting on review"
+gh issue edit <n> --add-label "in review"
 ```
 
-When the owner confirms the merge: move the issue to Done with a comment carrying the merge
-SHA. Release any remaining terminals (`worker-release`) and leave the worktree in place —
+With `tracker: none` there is nothing to close: paste the Owner summary and the PR link
+into the chat and stop.
+
+When the owner confirms the merge: close the issue with a comment carrying the merge SHA —
+`orca linear save-issue ISSUE --state Done` on Linear, `gh issue close <n> --comment "…"`
+on GitHub. Release any remaining terminals (`worker-release`) and leave the worktree in place —
 the owner decides when to delete it.
 
 ## When things go sideways

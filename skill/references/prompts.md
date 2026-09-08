@@ -16,6 +16,14 @@ Do not push, do not open PRs, do not touch the issue tracker. Do not send custom
 secrets to external tools. Write your output ONLY to the file named below, and back every
 claim about the code with a concrete path (file:line).
 
+Stay inside the issue. If you find a bug, a smell or a stale doc that is not what you were
+asked about, append one line to .orca-run/50-followups.md — what it is and where — and
+carry on. Do not repair it, do not widen your plan to cover it, and do not open an issue
+for it. The owner approves one scope, and anything past it is work nobody agreed to.
+
+Write in English. The owner reads a different file, in <language>, and the orchestrator
+writes that one.
+
 When you are done, send worker_done as the preamble describes, with a three-sentence summary.
 ```
 
@@ -77,9 +85,17 @@ Output, in this order:
 4. Criteria coverage: a table of criterion → the step that satisfies it → the test that
    proves it.
 5. Accepted risks and how they will be watched.
-6. Recommended review level for phase 8: light / deep / adversarial, with a reason.
-7. Questions for the owner, if any — at most 3, each with your recommendation.
+6. **Out of scope**: what this run will deliberately NOT do, and why. Anything in
+   .orca-run/50-followups.md that a planner wanted to fold in belongs here, not in the
+   plan. Be specific — this section is what the owner is shown at the gate, and it is the
+   list the reviewers use to tell a missing feature from an out-of-scope one.
+7. Recommended review level for phase 8: light / deep / adversarial, with a reason.
+8. Questions for the owner, if any — at most 3, each with your recommendation.
 ```
+
+The verdict has no plain-language section for the owner and should not grow one. The
+orchestrator writes that, because it is the only party that has read A, B, the gaps and the
+verdict — and because a worker summarising its own output is not a summary.
 
 ## IMPLEMENT — `roles.implementer`
 
@@ -91,6 +107,12 @@ use `orca orchestration ask` before deviating. Do not improvise.
 Rules: small commits on this branch following the repo's commit convention, with no tool
 trailers; never push; honour every invariant in <conventions_files>; a test for each
 criterion; an entry in <changelog>; docs updated when behaviour changes.
+
+Nothing outside the verdict. Not a rename you think is better, not a lint fix in a file you
+happened to open, not a dependency bump. Reviewers check your diff against a plan the owner
+approved; every line that is not in that plan is a line they cannot judge, and the honest
+ones will block on it. Found something worth doing? One line in
+.orca-run/50-followups.md and move on.
 
 Before reporting, run `<verify>` (and `<verify.ui_command>` if you touched UI) and fix what
 it surfaces. In worker_done state: the commits you made, a summary of the verify output,
@@ -161,6 +183,11 @@ Output: .orca-run/31-review-<role>.md. Each finding opens with a header line
 `[BLOCKS|SHOULD|COULD] file:line — title`, followed by: what happens, why it matters, and
 how to fix it concretely. No findings "just in case": if you cannot demonstrate it in the
 diff or with a test, leave it out. End with "Verdict: approve | fix" and one sentence.
+
+Check the verdict's "Out of scope" section before you file anything. Work the owner
+explicitly excluded is not a finding — at most a `[COULD]` noting it stayed excluded. And
+if the diff contains changes the verdict does not call for, that IS a finding: say so, at
+`[SHOULD]` or above, because the owner approved a plan and you are reviewing against it.
 ```
 
 Focus per role:

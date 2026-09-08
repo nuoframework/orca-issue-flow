@@ -56,9 +56,9 @@ in a child worktree.
 
 ## The roster
 
-`config.roles` maps each of the nine roles to a `launch` command and a `fallback`. Use them
-verbatim and append what the phase needs (`--task <id> --worktree $WT --json`). Never
-substitute a model of your own choosing: the owner picked these.
+`config.roles` maps each role to a `launch` command and a `fallback`. Use them verbatim and
+append what the phase needs (`--task <id> --worktree $WT --json`). Never substitute a model
+of your own choosing: the owner picked these.
 
 | Role | Config key | Phase |
 |---|---|---|
@@ -71,11 +71,16 @@ substitute a model of your own choosing: the owner picked these.
 | Light review 2 | `roles.review_light_2` | 8 |
 | Deep review | `roles.review_deep` | 8 |
 | Adversarial review | `roles.review_adversarial` | 8 |
+| Reader | `roles.reader` | 7, and anywhere else a log outgrows a window |
 
-What the flow depends on is not any particular model but the **independence** of these
-roles: two planners that think alike produce one plan, and a reviewer from the
+What the flow depends on is not any particular model but the **independence** of the nine
+panel roles: two planners that think alike produce one plan, and a reviewer from the
 implementer's own family finds nothing. If the owner has collapsed families in the config,
 say so once at the start of the run and continue.
+
+The reader is not one of the nine. It extracts, it does not judge, and nothing downstream
+inherits its taste — so it may share a family with any of them without costing the flow
+anything.
 
 A `launch` starting with `orca orchestration worker-start` is dispatched directly. One
 starting with `orca terminal create` needs the terminal dance instead: create it, wait for
@@ -193,11 +198,34 @@ before reporting, and **does not push**. Keep the same terminal for fixes
 ## Phase 7 · Deterministic gates (you run them, even if the implementer already did)
 
 ```bash
-(cd <worktree> && <verify>)          # + config.verify.ui_command if there is UI
+(cd <worktree> && <verify>) > .orca-run/20-gates.log 2>&1   # + ui_command if there is UI
+wc -l < .orca-run/20-gates.log
 ```
 
-Save the output to `.orca-run/20-gates.log`. Red → new fix task for the implementer with the
-log, then back to this phase. Never move to review with a red gate.
+Green → phase 8. Red is where this phase costs you something, so route it:
+
+- Under `config.context.digest_gate_logs_over` lines → read the log yourself.
+- Over it → **do not read it.** Dispatch the reader and work from what it writes:
+
+```bash
+orca orchestration task-create --spec "<READ prompt, see references/prompts.md>" --json
+<launch:reader> --task <tR> --worktree $WT --json
+orca orchestration check --wait --types worker_done --timeout-ms 300000 --json
+```
+
+Then open the fix round with `.orca-run/20-gates-summary.md`, not with the log. The log stays
+in the worktree and the summary carries line numbers into it, so the implementer can go to the
+source for anything the summary does not settle.
+
+Two things this is buying, and they are not the same thing. The log never enters your window
+or the implementer's — but more than that, fix rounds share the implementer's terminal, so a
+raw log pasted on each round accumulates there, and round 1's log still reads as current when
+you are on round 3. The digest is what keeps a fixed failure from being fixed twice.
+
+Once the same failure has survived `config.context.raw_log_after_rounds` rounds, hand over the
+raw log instead. If two digests have not unblocked it, the digest is not what is in the way.
+
+Never move to review with a red gate.
 
 ## Phase 8 · Tiered review
 

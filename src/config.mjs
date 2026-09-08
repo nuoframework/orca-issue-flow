@@ -59,6 +59,21 @@ export function renderConfig(cfg) {
     L.push("  ui_command: null");
   }
   L.push("");
+  L.push("# --- Context routing ------------------------------------------------------");
+  L.push("#");
+  L.push("# Machine-generated output is the cheapest thing to keep out of an expensive");
+  L.push("# context window: its shape is extractable, and the original never leaves");
+  L.push("# .orca-run/. roles.reader does the extraction.");
+  L.push("");
+  L.push("context:");
+  L.push("  # Digest the verify log through roles.reader above this many lines.");
+  L.push("  # 0 turns it off and the orchestrator reads the raw log.");
+  L.push(`  digest_gate_logs_over: ${cfg.context.digest_gate_logs_over}`);
+  L.push("  # Hand the implementer the raw log once the same failure has survived this");
+  L.push("  # many rounds. Two digests that did not unblock it mean the digest is not");
+  L.push("  # what is in the way.");
+  L.push(`  raw_log_after_rounds: ${cfg.context.raw_log_after_rounds}`);
+  L.push("");
   L.push("# --- Issue tracker --------------------------------------------------------");
   L.push("");
   L.push("# linear | github | none");

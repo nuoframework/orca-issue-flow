@@ -103,9 +103,51 @@ Fix round after a red gate or review findings — same terminal:
 Fix the following and run `<verify>` again before reporting. Change nothing outside this
 list unless it is required to compile or to make a test pass:
 
-<paste the relevant part of .orca-run/20-gates.log, or the BLOCKS/SHOULD findings from
+<the failing blocks from .orca-run/20-gates-summary.md, or the BLOCKS/SHOULD findings from
 32-findings.md>
+
+The full verify log is at .orca-run/20-gates.log and the summary carries line numbers into
+it. Open it for any failure the summary does not settle — do not read it end to end.
 ```
+
+Paste the summary, not the log. Rounds share the implementer's terminal, so a raw log
+pasted three times sits in that context three times, and the oldest one still reads as
+current. Once the same failure has survived `config.context.raw_log_after_rounds` rounds,
+give it the raw log instead — two digests that did not unblock it mean the digest is not
+what is in the way.
+
+## READ — `roles.reader` → `20-gates-summary.md`
+
+A service role, not a panelist. It has no opinion about the code and nothing downstream
+depends on its taste, so it can share a model family with anyone. Give it the shared header
+without the conventions paragraph — it does not need the project's rules to read a log.
+
+```
+Role: reader. You extract, you do not diagnose. Do not modify any file, do not suggest a
+fix, do not theorise about causes, and do not open a product file unless a stack frame
+points at one.
+
+Input: .orca-run/20-gates.log. Output: .orca-run/20-gates-summary.md.
+
+1. Header: the command that ran, its exit code, and the counts (passed / failed / skipped).
+2. One block per FAILING test, in the order the log has them:
+   - `### <test name>` and the test's own file:line
+   - Expected and received, VERBATIM, trimmed to ten lines if longer
+   - The assertion that failed
+   - Only the stack frames whose path is inside this repo. Drop node_modules,
+     node:internal, and the test runner's own frames.
+   - A last line `Log lines <first>-<last>` so a reader can go to the source.
+3. Type and lint errors GROUPED BY FILE. When many errors share one root cause, write
+   "N errors, root at file:line" and give the root — do not list the N.
+4. Nothing else. No list of what passed, no theory of the cause, no suggested fix.
+
+Never paraphrase an error message: copy it. A reworded error cannot be grepped for.
+If you cannot tell whether something is a failure, include it.
+```
+
+The rules that matter here are the negative ones. A model asked to summarise a log will
+reword errors, guess at causes and drop the frames it thinks are noise — and the one frame
+it drops is the one that mattered.
 
 ## REVIEW — `roles.review_light_1` · `review_light_2` · `review_deep` · `review_adversarial`
 

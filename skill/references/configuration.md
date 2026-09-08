@@ -24,6 +24,28 @@ every run and stops if it is missing.
 Make `verify.command` the same thing CI runs. The point of the gate is that the machine,
 not a model, decides whether the work compiles and passes.
 
+## Context routing
+
+```yaml
+context:
+  digest_gate_logs_over: 200
+  raw_log_after_rounds: 2
+```
+
+| Key | Meaning |
+|---|---|
+| `digest_gate_logs_over` | Above this many lines, the verify log goes through `roles.reader` and the orchestrator works from `20-gates-summary.md` instead. `0` turns it off. |
+| `raw_log_after_rounds` | Once the same failure has survived this many rounds, the implementer gets the raw log. Two digests that did not unblock it mean the digest is not the obstacle. |
+
+A verify log is mostly noise that looks like signal: hundreds of passing lines, coverage
+tables, and stack frames through `node_modules` and the test runner. The forty lines that
+matter are buried in it, and it is not paid once — fix rounds share the implementer's
+terminal, so each round's log stacks up in the same context and the stale ones still read
+as current.
+
+The full log always stays at `.orca-run/20-gates.log` and the summary carries line numbers
+into it. Nothing is lost; the worst case is one targeted read.
+
 ## Tracker
 
 | Key | Meaning |
@@ -61,6 +83,19 @@ and `--json` itself. Two shapes are supported:
 
 `fallback` is used for that one task when a model reports being at capacity or over its
 limit. Set it to `null` to have the orchestrator escalate instead.
+
+### `roles.reader`
+
+The tenth entry, and the only one that is not a panelist. It reads machine output — verify
+logs above all — and writes back an extraction: the failures, verbatim, with the repo's own
+stack frames and line numbers into the original. It does not diagnose and it does not
+propose.
+
+Because it has no opinion, the independence rules below do not apply to it: it may share a
+family with any other role. Pick the cheapest model whose context window fits your logs. The
+default is Haiku through the `claude` launcher, which needs no auth you do not already have.
+If what you are short of is quota rather than context, move it to a provider outside the
+family carrying the rest of the roster.
 
 ### Choosing the roster
 

@@ -84,8 +84,13 @@ export const LAUNCHERS = [
 export const EFFORTS = ["low", "medium", "high"];
 
 /**
- * The nine roles of the flow. `why` is shown in the wizard so people can make a real
- * choice instead of accepting defaults they do not understand.
+ * The nine roles of the panel, plus the service roles that support them. `why` is shown
+ * in the wizard so people can make a real choice instead of accepting defaults they do
+ * not understand.
+ *
+ * A role marked `service: true` is not a panelist: it has no opinion, it does not judge
+ * the code, and nothing downstream depends on its taste. That is why it can share a model
+ * family with anyone without costing the flow its independence.
  */
 export const ROLES = [
   {
@@ -160,7 +165,21 @@ export const ROLES = [
     default: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
     fallback: { launcher: "opencode", model: "opencode/glm-5.3" },
   },
+  {
+    key: "reader",
+    label: "Reader",
+    why: "Turns machine output — verify logs above all — into something worth a context window. Extracts, never diagnoses.",
+    service: true,
+    default: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
+    fallback: { launcher: "claude", model: "claude-fable-5-1", effort: "low" },
+  },
 ];
+
+/** The nine that carry an opinion. The wizard introduces these as the panel. */
+export const PHASE_ROLES = ROLES.filter((r) => !r.service);
+
+/** Support roles the orchestrator calls on demand rather than at a fixed phase. */
+export const SERVICE_ROLES = ROLES.filter((r) => r.service);
 
 /** Paths whose diffs should always get the deep review. Suggested per ecosystem. */
 export const DEEP_REVIEW_SUGGESTIONS = [

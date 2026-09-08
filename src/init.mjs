@@ -11,7 +11,9 @@ import {
   DEEP_REVIEW_SUGGESTIONS,
   EFFORTS,
   LAUNCHERS,
+  PHASE_ROLES,
   ROLES,
+  SERVICE_ROLES,
   buildLaunch,
   findLauncher,
 } from "./presets.mjs";
@@ -221,8 +223,16 @@ export async function init(options = {}) {
         "from the same model family.",
     ),
   );
-  for (const role of ROLES) {
+  for (const role of PHASE_ROLES) {
     p.log.message(`${c.yellow("•")} ${c.bold(role.label)} ${c.dim("— " + role.why)}`);
+  }
+  p.log.message(
+    c.dim(
+      "\nPlus a service role that has no opinion and never judges the code:",
+    ),
+  );
+  for (const role of SERVICE_ROLES) {
+    p.log.message(`${c.dim("•")} ${c.bold(role.label)} ${c.dim("— " + role.why)}`);
   }
 
   const rosterMode = guard(
@@ -259,6 +269,7 @@ export async function init(options = {}) {
     docs_dirs: detect.detectDocsDirs(root),
     changelog: detect.detectChangelog(root),
     verify: { command: verifyCommand, ui_command: uiCommand },
+    context: { digest_gate_logs_over: 200, raw_log_after_rounds: 2 },
     tracker,
     issue_prefix: issuePrefix,
     deep_review_paths: deepPaths,

@@ -130,7 +130,10 @@ export const ROLES = [
     label: "Implementer",
     why: "The only worker allowed to touch product files. Follows the approved plan literally.",
     phase: 6,
-    default: { launcher: "opencode" },
+    // Explicit on purpose. Left as "whatever opencode defaults to", its family cannot be
+    // resolved, and the rule that no reviewer may share the implementer's family silently
+    // stops being checked — in the pack most people run.
+    default: { launcher: "opencode", model: "opencode/kimi-k3" },
     fallback: { launcher: "claude", model: "claude-fable-5-1", effort: "medium" },
   },
   {
@@ -199,6 +202,146 @@ export const ADVERSARIAL_TOPIC_SUGGESTIONS = [
   "database migrations",
   "multi-tenant isolation",
 ];
+
+
+/**
+ * The real vendor behind a choice. `LAUNCHERS[].family` describes the CLI, which is not the
+ * same thing: everything reached through OpenCode would otherwise read as one family, and
+ * the whole roster would look independent while two roles ran the same model.
+ */
+const OPENCODE_FAMILIES = [
+  [/^opencode\/glm/, "zhipu"],
+  [/^opencode\/gemini/, "google"],
+  [/^opencode\/grok/, "xai"],
+  [/^opencode\/kimi/, "moonshot"],
+  [/^opencode\/(gpt|o[0-9])/, "openai"],
+  [/^opencode\/claude/, "anthropic"],
+];
+
+export function familyOf(choice) {
+  if (!choice) return null;
+  if (choice.raw) return null; // a hand-written command: we cannot know, so we do not guess
+  if (choice.launcher === "opencode") {
+    // No model means "whatever the CLI defaults to", which we genuinely cannot resolve.
+    // Saying "opencode" here would let it pass as a family of its own and quietly satisfy
+    // every independence check it is compared against.
+    if (!choice.model) return "opencode:unknown";
+    for (const [pattern, family] of OPENCODE_FAMILIES) {
+      if (pattern.test(choice.model)) return family;
+    }
+    return "opencode:unknown";
+  }
+  return findLauncher(choice.launcher)?.family ?? null;
+}
+
+/**
+ * The independence rules from the configuration guide, as code. Returns one line per
+ * overlap that actually costs something — the wizard shows these, and the packs are
+ * checked against them so the package never ships a roster that contradicts its own README.
+ *
+ * `roles` is a map of role key → choice. The reader is exempt: it has no opinion.
+ */
+export function checkIndependence(roles) {
+  const f = (key) => familyOf(roles[key]);
+  const warnings = [];
+  const known = (...keys) => keys.every((k) => f(k) && !String(f(k)).endsWith(":unknown"));
+
+  if (known("plan_a", "plan_b") && f("plan_a") === f("plan_b")) {
+    warnings.push(
+      `Plan A and Plan B are both ${f("plan_a")}. Two planners that think alike give you one plan with extra steps, and the judge has nothing to arbitrate.`,
+    );
+  }
+  if (known("gaps", "plan_a") && (f("gaps") === f("plan_a") || f("gaps") === f("plan_b"))) {
+    warnings.push(
+      `The gap hunter is ${f("gaps")}, same as a planner. Its job is to see what the planners missed, which it cannot do sharing their priors.`,
+    );
+  }
+  const reviewers = ["review_light_1", "review_light_2", "review_deep", "review_adversarial"];
+  for (const r of reviewers) {
+    if (known(r, "implementer") && f(r) === f("implementer")) {
+      warnings.push(
+        `${r} shares the implementer's family (${f(r)}). A reviewer from the implementer's family tends to accept its assumptions.`,
+      );
+    }
+  }
+  const others = reviewers.filter((r) => r !== "review_adversarial");
+  if (known("review_adversarial") && others.some((r) => known(r) && f(r) === f("review_adversarial"))) {
+    warnings.push(
+      `The adversarial reviewer is ${f("review_adversarial")}, already used by another reviewer. It is the only one asked to assume the rest are wrong.`,
+    );
+  }
+  return warnings;
+}
+
+
+/**
+ * Ready-made rosters. The axis is not really price — it is how much a mistake costs you on
+ * the issues you point this at. Cheap models plan and review worse; that is fine when the
+ * work is easy to undo and expensive when it is not.
+ *
+ * Two positions are held across all three packs. The judge is never the cheapest thing in
+ * the roster, because it writes the plan that actually gets built. And the light reviewers
+ * never share the implementer's family, because a reviewer that thinks like the implementer
+ * approves the implementer.
+ *
+ * `orchestrator` is a recommendation, not a launcher: the orchestrator is whatever session
+ * you run the skill from. The skill reads it at step 0 and says something if you are well
+ * below it.
+ */
+export const ROSTER_PACKS = [
+  {
+    id: "budget",
+    label: "Budget",
+    hint: "small, reversible issues — high volume, cheap to be wrong",
+    orchestrator: "a mid-tier model (Fable, Sonnet)",
+    roles: {
+      plan_a: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
+      plan_b: { launcher: "opencode", model: "opencode/glm-5.3" },
+      gaps: { launcher: "opencode", model: "opencode/grok-4.6" },
+      judge: { launcher: "opencode", model: "opencode/kimi-k3" },
+      implementer: { launcher: "claude", model: "claude-fable-5-1", effort: "low" },
+      review_light_1: { launcher: "opencode", model: "opencode/glm-5.3" },
+      review_light_2: { launcher: "opencode", model: "opencode/grok-4.6" },
+      review_deep: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
+      review_adversarial: { launcher: "opencode", model: "opencode/kimi-k3" },
+      reader: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
+    },
+  },
+  {
+    id: "balanced",
+    label: "Balanced",
+    hint: "the default — strong planners and judge, cheap hygiene passes",
+    orchestrator: "a frontier model (Opus, Fable)",
+    roles: null, // falls back to each role's own `default`
+  },
+  {
+    id: "frontier",
+    label: "Frontier",
+    hint: "auth, migrations, billing, tenant isolation — being wrong is expensive",
+    orchestrator: "a frontier model (Opus)",
+    roles: {
+      plan_a: { launcher: "claude", model: "claude-opus-5", effort: "high" },
+      plan_b: { launcher: "codex" },
+      gaps: { launcher: "grok" },
+      judge: { launcher: "claude", model: "claude-opus-5", effort: "high" },
+      implementer: { launcher: "codex" },
+      review_light_1: { launcher: "claude", model: "claude-opus-4-8" },
+      review_light_2: { launcher: "opencode", model: "opencode/glm-5.3" },
+      review_deep: { launcher: "claude", model: "claude-opus-5", effort: "high" },
+      review_adversarial: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
+      reader: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
+    },
+  },
+];
+
+/** The choice a pack makes for a role, falling back to the role's own default. */
+export function packChoice(pack, role) {
+  return pack?.roles?.[role.key] ?? role.default;
+}
+
+export function findPack(id) {
+  return ROSTER_PACKS.find((p) => p.id === id);
+}
 
 export function findLauncher(id) {
   return LAUNCHERS.find((l) => l.id === id);

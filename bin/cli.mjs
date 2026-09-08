@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { init } from "../src/init.mjs";
+import { init, reconfigureRoles } from "../src/init.mjs";
 
 const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pkg = JSON.parse(readFileSync(resolve(PKG_ROOT, "package.json"), "utf8"));
@@ -27,23 +27,27 @@ if (flags.has("-h") || flags.has("--help") || command === "help") {
 
   Commands
     init          Install the skill and write .orca-flow.yml  (default)
+    roles         Re-pick the roster on an installed project. Rewrites only the
+                  roles section and leaves your other edits alone.
     help          Show this
 
   Options
-    --force       Overwrite an existing .orca-flow.yml without asking
+    --force       Skip the overwrite/replace confirmation
     -v, --version
     -h, --help
 `);
   process.exit(0);
 }
 
-if (command !== "init") {
+const COMMANDS = { init, roles: reconfigureRoles };
+
+if (!COMMANDS[command]) {
   console.error(`Unknown command: ${command}\nRun \`npx ${pkg.name} --help\`.`);
   process.exit(1);
 }
 
 try {
-  await init({ force: flags.has("--force") });
+  await COMMANDS[command]({ force: flags.has("--force") });
 } catch (error) {
   console.error(`\n${error?.stack ?? error}\n`);
   process.exit(1);

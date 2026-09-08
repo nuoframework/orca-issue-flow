@@ -126,6 +126,7 @@ Everything project-specific lives in `.orca-flow.yml`, documented in full in
 actually revisit:
 
 ```yaml
+orchestrator: a frontier model  # a note to you — the skill checks it and says something
 language: Spanish               # what YOU read. Never the code, commits or PR body.
 
 verify:
@@ -146,8 +147,22 @@ roles:
 ```
 
 `launch` is a command fragment, not a fixed enum — anything Orca can start, including
-`orca terminal create --command "…"` for a CLI the wizard has never heard of. Re-run
-`npx orca-issue-flow` any time to redo the wizard.
+`orca terminal create --command "…"` for a CLI the wizard has never heard of.
+
+The roster comes from one of three packs — **budget** for small reversible work, **balanced**
+by default, **frontier** for the issues where being wrong is expensive — or from picking a
+provider and model per role, ten questions deep. Either way the wizard checks the result
+against the independence rules and tells you which overlaps actually cost you something: two
+planners of one family, a gap hunter that shares the planners' priors, a reviewer wearing the
+implementer's blind spots.
+
+Change your mind later without touching anything else you have edited:
+
+```bash
+npx orca-issue-flow roles
+```
+
+It rewrites only the roles section, which is why that section is last in the file.
 
 <br>
 

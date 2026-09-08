@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
 import c from "picocolors";
 
-import { renderConfig } from "./config.mjs";
+import { ROLES_SECTION_MARKER, renderConfig, renderRolesSection } from "./config.mjs";
 import * as detect from "./detect.mjs";
 import {
   ADVERSARIAL_TOPIC_SUGGESTIONS,
@@ -14,9 +14,14 @@ import {
   LAUNCHERS,
   PHASE_ROLES,
   ROLES,
+  ROSTER_PACKS,
   SERVICE_ROLES,
   buildLaunch,
+  checkIndependence,
+  familyOf,
   findLauncher,
+  findPack,
+  packChoice,
 } from "./presets.mjs";
 
 const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -244,30 +249,7 @@ export async function init(options = {}) {
     p.log.message(`${c.dim("•")} ${c.bold(role.label)} ${c.dim("— " + role.why)}`);
   }
 
-  const rosterMode = guard(
-    await p.select({
-      message: "Set up the roster how?",
-      options: [
-        { value: "recommended", label: "Use the recommended roster", hint: "you can edit .orca-flow.yml later" },
-        { value: "custom", label: "Pick the agent and model for each role" },
-      ],
-      initialValue: "recommended",
-    }),
-  );
-
-  const roles = [];
-  for (const role of ROLES) {
-    let choice = role.default;
-    if (rosterMode === "custom") {
-      choice = await pickRole(role);
-    }
-    roles.push({
-      key: role.key,
-      label: role.label,
-      launch: buildLaunch(choice),
-      fallback: buildLaunch(role.fallback),
-    });
-  }
+  const { roles, orchestrator } = await chooseRoster();
 
   // ---------------------------------------------------------------- write
   const cfg = {
@@ -278,6 +260,7 @@ export async function init(options = {}) {
     docs_dirs: detect.detectDocsDirs(root),
     changelog: detect.detectChangelog(root),
     language: language.trim() || "English",
+    orchestrator,
     verify: { command: verifyCommand, ui_command: uiCommand },
     context: { digest_gate_logs_over: 200, raw_log_after_rounds: 2 },
     tracker,
@@ -351,6 +334,113 @@ export function applyInstall(root, cfg, skillsPath, skillName = SKILL_NAME) {
   cpSync(join(PKG_ROOT, "skill"), skillTarget, { recursive: true });
 
   return { skillTarget, ignoreAdded: ensureGitignore(root, ".orca-run/") };
+}
+
+
+
+/**
+ * Re-pick the roster on an installed project without disturbing anything else. The roles
+ * section is always last and always rendered by one function, so this is a clean cut rather
+ * than a parse — the config is meant to be hand-edited, and a wizard that regenerates the
+ * whole file would silently eat those edits.
+ */
+export async function reconfigureRoles(options = {}) {
+  console.log("");
+  p.intro(`${c.bgYellow(c.black(" orca-issue-flow "))} ${c.dim("re-pick the roster")}`);
+
+  const root = detect.repoRoot() ?? process.cwd();
+  const configPath = join(root, CONFIG_NAME);
+  if (!existsSync(configPath)) {
+    p.cancel(`No ${CONFIG_NAME} here. Run \`npx orca-issue-flow\` first.`);
+    process.exit(1);
+  }
+
+  const current = readFileSync(configPath, "utf8");
+  const cut = current.indexOf(ROLES_SECTION_MARKER);
+  if (cut === -1) {
+    p.log.warn(
+      `The roles section is not where it is expected in ${CONFIG_NAME}.\n` +
+        "Rewriting it in place would risk your edits, so nothing was changed.\n" +
+        "Either restore the section header or re-run the full wizard.",
+    );
+    p.outro(c.dim("Nothing written."));
+    return;
+  }
+
+  p.log.info(`Current roster in ${c.cyan(CONFIG_NAME)}:`);
+  for (const line of current.slice(cut).split("\n")) {
+    if (/^\s{4}launch:/.test(line)) p.log.message(c.dim("  " + line.trim()));
+  }
+
+  const { roles, orchestrator } = await chooseRoster();
+
+  if (!options.force) {
+    const ok = guard(await p.confirm({ message: "Replace the roles section with this?", initialValue: true }));
+    if (!ok) {
+      p.cancel("Left the roster alone. Nothing was written.");
+      process.exit(0);
+    }
+  }
+
+  writeFileSync(configPath, current.slice(0, cut) + renderRolesSection({ roles, orchestrator }), "utf8");
+  p.log.success(`Rewrote the roles section of ${CONFIG_NAME}. Everything above it is untouched.`);
+  p.outro(`${c.dim("Docs:")} https://github.com/nuoframework/orca-issue-flow`);
+}
+
+/**
+ * Pack or per-role, then check the result against the independence rules. Shared by the
+ * installer and by `orca-issue-flow roles`, so re-picking the roster later asks exactly
+ * the same questions.
+ */
+export async function chooseRoster() {
+  const rosterMode = guard(
+    await p.select({
+      message: "Set up the roster how?",
+      options: [
+        ...ROSTER_PACKS.map((pack) => ({
+          value: pack.id,
+          label: pack.label,
+          hint: pack.hint,
+        })),
+        { value: "__custom__", label: "Pick the agent and model for each role", hint: "ten questions" },
+      ],
+      initialValue: "balanced",
+    }),
+  );
+
+  const pack = findPack(rosterMode);
+  const chosen = {};
+  for (const role of ROLES) {
+    chosen[role.key] = rosterMode === "__custom__" ? await pickRole(role) : packChoice(pack, role);
+  }
+
+  // The flow's whole claim is that the roles do not share blind spots. Say so when they do,
+  // rather than letting the config quietly contradict the README.
+  const warnings = checkIndependence(chosen);
+  if (warnings.length) {
+    p.log.warn(
+      [c.bold("This roster overlaps where it costs you something:"), ...warnings.map((w) => `  • ${w}`)].join("\n"),
+    );
+    const keep = guard(
+      await p.confirm({ message: "Keep it anyway?", initialValue: rosterMode !== "__custom__" }),
+    );
+    if (!keep) return chooseRoster();
+  } else {
+    const families = PHASE_ROLES.map((r) => familyOf(chosen[r.key])).filter(
+      (f) => f && !String(f).endsWith(":unknown"),
+    );
+    p.log.success(`Independent roster — ${new Set(families).size} distinct model families across the nine.`);
+  }
+
+  return {
+    roles: ROLES.map((role) => ({
+      key: role.key,
+      label: role.label,
+      launch: buildLaunch(chosen[role.key]),
+      fallback: buildLaunch(role.fallback),
+    })),
+    orchestrator: pack?.orchestrator ?? "a frontier model (Opus, Fable)",
+  };
 }
 
 /** One role's agent → model → effort chain. Custom entries are always available. */

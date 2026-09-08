@@ -81,6 +81,43 @@ With `none`, the orchestrator takes the brief from the chat and skips phase 12.
 
 ## Roles
 
+Pick a ready-made roster at install time, or one model per role. Re-pick either way, at any
+time, with:
+
+```bash
+npx orca-issue-flow roles
+```
+
+That rewrites the roles section and nothing else — every edit you made above it survives,
+which is why the section is last in the file.
+
+### The packs
+
+| Pack | For | Trades |
+|---|---|---|
+| **Budget** | Small, reversible issues at volume | Weaker planning and review; still keeps the judge off the bottom shelf |
+| **Balanced** | The default | Strong planners and judge, cheap hygiene passes |
+| **Frontier** | Auth, migrations, billing, tenant isolation | Costs the most; nothing in the roster is a compromise |
+
+Two positions hold across all three. The judge is never the cheapest thing in the roster,
+because it writes the plan that actually gets built. And no light reviewer shares the
+implementer's family, because a reviewer that thinks like the implementer approves the
+implementer.
+
+Every pack is checked against the independence rules below before it ships, and so is
+anything you assemble by hand — the wizard tells you which overlaps cost you something and
+lets you go back.
+
+### `orchestrator`
+
+```yaml
+orchestrator: a frontier model (Opus)
+```
+
+A note to yourself, not a launcher: the orchestrator is whatever session you run the skill
+from, so no config can start it. The skill reads this at step 0 and says something once if
+you are running twelve phases of dispatch and synthesis from a small model.
+
 ```yaml
 roles:
   plan_a:

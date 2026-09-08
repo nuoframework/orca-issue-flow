@@ -100,12 +100,34 @@ export function renderConfig(cfg) {
   L.push("# Fix rounds before the orchestrator stops and escalates to you.");
   L.push(`max_review_rounds: ${cfg.max_review_rounds}`);
   L.push("");
-  L.push("# --- Roles ----------------------------------------------------------------");
+  L.push(renderRolesSection(cfg));
+  return L.join("\n");
+}
+
+/** Marks where the roles section starts, so `orca-issue-flow roles` can replace just it. */
+export const ROLES_SECTION_MARKER =
+  "# --- Roles ----------------------------------------------------------------";
+
+/**
+ * Always last in the file, and always rendered by this one function — that is what lets
+ * `orca-issue-flow roles` rewrite the roster without touching a single hand edit above it.
+ */
+export function renderRolesSection(cfg) {
+  const L = [];
+  L.push(ROLES_SECTION_MARKER);
   L.push("#");
   L.push("# `launch` is the command the orchestrator runs; it appends --task/--worktree/--json.");
   L.push("# `fallback` is used when a model reports being at capacity or over its limit.");
   L.push("# What matters is that the roles stay independent: two planners that think alike");
   L.push("# produce one plan, and a reviewer sharing the implementer's family finds nothing.");
+  L.push("#");
+  L.push("# Re-pick this roster any time with `npx orca-issue-flow roles`. It rewrites this");
+  L.push("# section only and leaves everything above untouched.");
+  L.push("");
+  L.push("# The orchestrator is whatever session you run the skill from, so this is a note");
+  L.push("# to yourself, not a launcher. The skill checks it at step 0 and says something");
+  L.push("# if you are running a twelve-phase orchestration from a small model.");
+  L.push(`orchestrator: ${yamlString(cfg.orchestrator ?? "a frontier model (Opus, Fable)")}`);
   L.push("");
   L.push("roles:");
   for (const role of cfg.roles) {

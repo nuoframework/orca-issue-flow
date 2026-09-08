@@ -45,8 +45,15 @@ Non-negotiable rules:
 ## Step 0 · Load the config
 
 Read `.orca-flow.yml` at the repo root. It defines `base_branch`, `verify`,
-`conventions_files`, `tracker`, the review policy and the `roles` roster. If it is missing,
-**stop and tell the owner** to run `npx orca-issue-flow` — do not guess these values.
+`conventions_files`, `tracker`, `language`, the review policy and the `roles` roster. If it
+is missing, **stop and tell the owner** to run `npx orca-issue-flow` — do not guess these
+values.
+
+`config.orchestrator` says what the owner expects to be running this. It is a note, not a
+launcher — you are whatever session they opened. If you are clearly below it, say so once,
+in one line, before phase 0: twelve phases of dispatching, synthesising and holding two
+gates is not work a small model does well, and the owner would rather know now than at the
+verdict. Then continue if they want you to. Do not raise it again.
 
 Throughout, `ISSUE` is the issue key (`ABC-123`), `<base>` is `config.base_branch`,
 `<verify>` is `config.verify.command`, and `<launch:role>` is `config.roles.<role>.launch`.

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "economy_implementation_all",
+    "observed_on": "2026-11-10",
+    "sliders": {
+      "intelligence": 3,
+      "speed": 4,
+      "cost": 4
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=6&speed=8&cost=8&types=general%2Ccoding&reasoning=true&providers=anthropic%2Cgoogle%2Ckimi%2Copenai%2Cxai%2Czai%2Cdeepseek%2Cxiaomi%2Cminimax&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n3\nSpeed\n4\nCost\n4\nIntelligence Focus\nGeneral Intelligence\nCoding\nCapabilities\nReasoning\nProviders\nAnthropic\nGoogle\nKimi\nOpenAI\nSpaceXAI\nZai\nDeepSeek\nXiaomi\nMiniMax\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nGPT-6.1 Terra (Low)\nOpenAI\n\t29\t1.1 min\t1M\t$111\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n2\nGPT-6.1 Sol (Medium)\nOpenAI\n\t46\t3.8 min\t1M\t$389\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n3\nGPT-6.1 Terra (Medium)\nOpenAI\n\t38\t2.6 min\t1M\t$190\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n4\nGPT-6 Luna (Low)\nOpenAI\n\t10\t0.6 min\t1M\t$9\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n5\nGPT-6.1 Sol (Low)\nOpenAI\n\t35\t1.7 min\t1M\t$238\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n6\nGPT-6.1 Terra (High)\nOpenAI\n\t42\t4.0 min\t1M\t$267\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n7\nGPT-6.1 Sol (High)\nOpenAI\n\t50\t6.5 min\t1M\t$573\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n8\nGPT-6.1 Sol (Xhigh)\nOpenAI\n\t52\t9.3 min\t1M\t$718\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n9\nGPT-6.1 Terra (Xhigh)\nOpenAI\n\t45\t6.0 min\t1M\t$400\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n10\nClaude Fable 5.2 (Low, Default Fallback)\nAnthropic\n\t54\t6.5 min\t1M\t$2,862\t$8.00/1M\t$40.00/1M\t\nModel\nProviders\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "economy_opencode",
+    "observed_on": "2026-11-10",
+    "sliders": {
+      "intelligence": 3,
+      "speed": 4,
+      "cost": 4
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=6&speed=8&cost=8&types=general%2Ccoding&reasoning=true&providers=deepseek%2Czai%2Cxiaomi%2Cminimax&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n3\nSpeed\n4\nCost\n4\nIntelligence Focus\nGeneral Intelligence\nCoding\nCapabilities\nReasoning\nProviders\nDeepSeek\nZai\nXiaomi\nMiniMax\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nDeepSeek V4.1 Flash 1017 (Max)\nDeepSeek\n\t33\t16.5 min\t1M\t$521\t$0.30/1M\t$1.20/1M\t\nModel\nProviders\n\n\n2\nDeepSeek V4.1 Flash 1017 (High)\nDeepSeek\n\t29\t12.7 min\t1M\t$384\t$0.30/1M\t$1.20/1M\t\nModel\nProviders\n\n\n3\nMiniMax-M3.1-Flash\nMiniMax\n\t29\t14.4 min\t1M\t$358\t$0.15/1M\t$0.60/1M\t\nModel\nProviders\n\n\n4\nMiMo-V2.6-Pro\nXiaomi\n\t30\t36.8 min\t1M\t$221\t$0.43/1M\t$0.87/1M\t\nModel\nProviders\n\n\n5\nMiMo-V2.6-Flash\nXiaomi\n\t27\t64.8 min\t1M\t$106\t$0.14/1M\t$0.28/1M\t\nModel\nProviders\n\n\n6\nGLM-5.3-Flash\nZ AI\n\t28\t45.6 min\t1M\t$378\t$0.15/1M\t$0.50/1M\t\nModel\nProviders\n\n\n7\nGLM-5.3 (Low)\nZ AI\n\t23\t15.4 min\t1M\t$1,219\t$1.40/1M\t$4.40/1M\t\nModel\nProviders\n\n\n8\nMiniMax-M3\nMiniMax\n\t19\t11.9 min\t1M\t$878\t$0.30/1M\t$1.20/1M\t\nModel\nProviders\n\n\n9\nGLM-5.3 (Max)\nZ AI\n\t32\t30.1 min\t1M\t$3,496\t$1.40/1M\t$4.40/1M\t\nModel\nProviders\n\n\n10\nDeepSeek V4 Pro 0813 (Max)\nDeepSeek\n\t23\t24.6 min\t1M\t$1,402\t$1.32/1M\t$3.96/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nDeepSeek V4.1 Flash 1017 (Max)\nMiMo-V2.6-Pro\nMiMo-V2.6-Flash\nTry it out\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "economy_support",
+    "observed_on": "2026-11-10",
+    "sliders": {
+      "intelligence": 2,
+      "speed": 4,
+      "cost": 5
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=4&speed=8&cost=10&types=instruction-following%2Clow-hallucination&providers=anthropic%2Copenai%2Czai&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n2\nSpeed\n4\nCost\n5\nIntelligence Focus\nInstruction Following\nLow Hallucination\nProviders\nAnthropic\nOpenAI\nZai\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nGPT-6 Luna (Low)\nOpenAI\n\t10\t0.6 min\t1M\t$9\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n2\nGPT-6.1 Terra (Low)\nOpenAI\n\t29\t1.1 min\t1M\t$111\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n3\nClaude Haiku 5.5 (Low)\nAnthropic\n\t19\t2.2 min\t1M\t$40\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n4\nGPT-6 Luna (Medium)\nOpenAI\n\t18\t3.3 min\t1M\t$40\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n5\nGPT-6 Luna (Non-reasoning)\nOpenAI\n\t9\t2.2 min\t1M\t$53\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n6\nGPT-6.1 Sol (Low)\nOpenAI\n\t35\t1.7 min\t1M\t$238\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n7\nGPT-6.1 Terra (Medium)\nOpenAI\n\t38\t2.6 min\t1M\t$190\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n8\nClaude Haiku 5.5 (Medium)\nAnthropic\n\t25\t4.0 min\t1M\t$73\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n9\nGPT-6.1 Terra (Non-reasoning)\nOpenAI\n\t31\t2.3 min\t1M\t$213\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n10\nGPT-6 Luna (High)\nOpenAI\n\t21\t5.7 min\t1M\t$63\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "economy_anthropic",
+    "observed_on": "2026-11-10",
+    "sliders": {
+      "intelligence": 3,
+      "speed": 3,
+      "cost": 4
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=6&speed=6&cost=8&types=general%2Ccoding&reasoning=true&providers=anthropic&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n3\nSpeed\n3\nCost\n4\nIntelligence Focus\nGeneral Intelligence\nCoding\nCapabilities\nReasoning\nProviders\nAnthropic\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nClaude Fable 5.2 (Medium, Default Fallback)\nAnthropic\n\t56\t8.3 min\t1M\t$3,360\t$8.00/1M\t$40.00/1M\t\nModel\nProviders\n\n\n2\nClaude Fable 5.2 (Low, Default Fallback)\nAnthropic\n\t54\t6.5 min\t1M\t$2,862\t$8.00/1M\t$40.00/1M\t\nModel\nProviders\n\n\n3\nClaude Fable 5.2 (High, Default Fallback)\nAnthropic\n\t62\t17.4 min\t1M\t$7,106\t$8.00/1M\t$40.00/1M\t\nModel\nProviders\n\n\n4\nClaude Opus 5.5 (High, Default Fallback)\nAnthropic\n\t52\t9.5 min\t1M\t$2,716\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n5\nClaude Opus 5.5 (Medium, Default Fallback)\nAnthropic\n\t48\t7.1 min\t1M\t$2,031\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n6\nClaude Opus 5.5 (Xhigh, Default Fallback)\nAnthropic\n\t57\t16.2 min\t1M\t$4,766\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n7\nClaude Haiku 5.5 (Low)\nAnthropic\n\t19\t2.2 min\t1M\t$40\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n8\nClaude Haiku 5.5 (Medium)\nAnthropic\n\t25\t4.0 min\t1M\t$73\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n9\nClaude Haiku 5.5 (High)\nAnthropic\n\t30\t6.5 min\t1M\t$121\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\n\n\n10\nClaude Haiku 5.5 (Xhigh)\nAnthropic\n\t35\t9.6 min\t1M\t$193\t$0.10/1M\t$0.50/1M\t\nModel\nProviders\nAdjust\nStart Over\n\n"
+  }
+]

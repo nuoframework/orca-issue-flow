@@ -1,7 +1,7 @@
 {
   "name": "orca-issue-flow",
-  "version": "0.1.0",
-  "description": "Multi-agent issue workflow for Orca: two independent plans, a gap hunter, a judge, tiered review and two human gates. Installs as an agent skill, configurable per role.",
+  "version": "0.2.0",
+  "description": "Multi-agent issue workflow for Orca: independent planning, critical specialist reviews, adversarial closure and measured context admission.",
   "type": "module",
   "bin": {
     "orca-issue-flow": "bin/cli.mjs"
@@ -37,6 +37,10 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "yaml": "^2.9.1"
+  },
+  "scripts": {
+    "test": "node --test"
   }
 }

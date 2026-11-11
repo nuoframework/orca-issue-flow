@@ -25,11 +25,10 @@ export const LAUNCHERS = [
     kind: LAUNCHER_KINDS.worker,
     /** Models offered for this launcher. Free text is always allowed too. */
     models: [
+      "claude-opus-5-5",
+      "claude-sonnet-5-5",
+      "claude-haiku-5-5",
       "claude-fable-5-1",
-      "claude-opus-5",
-      "claude-opus-4-8",
-      "claude-sonnet-5",
-      "claude-haiku-4-5",
     ],
     supportsEffort: true,
     build: ({ model, effort }) =>
@@ -46,45 +45,41 @@ export const LAUNCHERS = [
     label: "Codex (worker-start --agent codex)",
     family: "openai",
     kind: LAUNCHER_KINDS.worker,
-    models: [],
-    supportsEffort: false,
-    build: () => "orca orchestration worker-start --agent codex",
+    models: ["gpt-6.1-terra", "gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol", "gpt-6-luna"],
+    supportsEffort: true,
+    build: ({ model, effort }) => ["orca orchestration worker-start --agent codex",
+      model ? `--model ${model}` : "", model && effort ? `--effort ${effort}` : ""].filter(Boolean).join(" "),
   },
   {
     id: "grok",
     label: "Grok (worker-start --agent grok)",
     family: "xai",
     kind: LAUNCHER_KINDS.worker,
-    models: [],
-    supportsEffort: false,
-    build: () => "orca orchestration worker-start --agent grok",
+    models: ["grok-4.6", "grok-4.5"],
+    supportsEffort: true,
+    build: ({ model, effort }) => ["orca orchestration worker-start --agent grok",
+      model ? `--model ${model}` : "", model && effort ? `--effort ${effort}` : ""].filter(Boolean).join(" "),
   },
   {
     id: "opencode",
-    label: "OpenCode (terminal, any model it exposes)",
+    label: "OpenCode (supervised worker, verified model catalog)",
     family: "opencode",
-    kind: LAUNCHER_KINDS.terminal,
-    models: [
-      "",
-      "opencode/grok-4.6",
-      "opencode/glm-5.3",
-      "opencode/gemini-3.1-pro",
-      "opencode/kimi-k3",
-    ],
+    kind: LAUNCHER_KINDS.worker,
+    models: ["opencode/claude-opus-5-5", "opencode/claude-sonnet-5-5",
+      "opencode/claude-haiku-5-5", "opencode/gpt-6.1-sol", "opencode/gpt-6-astra",
+      "opencode/gemini-4-argon", "opencode-go/kimi-k3.1-pro", "opencode/kimi-k3", "opencode/glm-5.3", "opencode/glm-5.3-flash",
+      "opencode/gemini-3.1-pro", "opencode/gemini-3.8-flash", "opencode/grok-4.7",
+      "opencode/gpt-6-sol", "opencode/gpt-6-luna", "opencode/deepseek-v4.1-flash"],
     supportsEffort: false,
-    build: ({ model, agent }) => {
-      const parts = ["opencode"];
-      if (agent) parts.push(`--agent ${agent}`);
-      if (model) parts.push(`--model ${model}`);
-      return `orca terminal create --command "${parts.join(" ")}"`;
-    },
+    build: ({ model }) => ["orca orchestration worker-start --agent opencode",
+      model ? `--model ${model}` : ""].filter(Boolean).join(" "),
   },
 ];
 
-export const EFFORTS = ["low", "medium", "high"];
+export const EFFORTS = ["low", "medium", "high", "xhigh", "max"];
 
 /**
- * The nine roles of the panel, plus the service roles that support them. `why` is shown
+ * The workflow roles of the panel, plus the service roles that support them. `why` is shown
  * in the wizard so people can make a real choice instead of accepting defaults they do
  * not understand.
  *
@@ -94,97 +89,125 @@ export const EFFORTS = ["low", "medium", "high"];
  */
 export const ROLES = [
   {
-    key: "plan_a",
-    label: "Plan A",
-    why: "Writes an independent implementation plan. Never sees plan B.",
-    phase: 2,
-    default: { launcher: "claude", model: "claude-fable-5-1", effort: "medium" },
-    fallback: { launcher: "claude", model: "claude-opus-4-8" },
+    key: "plan_a", label: "Plan A",
+    why: "Independent plan; never reads Plan B.", phase: 2,
+    default: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
+    fallback_2: { launcher: "claude", model: "claude-haiku-5-5", effort: "medium" },
   },
   {
-    key: "plan_b",
-    label: "Plan B",
-    why: "The second, independent plan. Pick a different family from Plan A — two correlated plans are worth one.",
-    phase: 2,
-    default: { launcher: "codex" },
-    fallback: { launcher: "claude", model: "claude-opus-4-8" },
+    key: "plan_b", label: "Plan B",
+    why: "Independent plan from a different provider; never reads Plan A.", phase: 2,
+    default: { launcher: "codex", model: "gpt-6.1-terra", effort: "medium" },
+    fallback: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
+    fallback_2: { launcher: "codex", model: "gpt-6-sol", effort: "medium" },
   },
   {
-    key: "gaps",
-    label: "Gap hunter",
-    why: "Reads both plans and only reports what neither considered. Proposes nothing.",
-    phase: 3,
-    default: { launcher: "grok" },
-    fallback: { launcher: "opencode", model: "opencode/grok-4.6" },
+    key: "gaps", label: "Gap hunter",
+    why: "Evidence-backed omissions in both plans; does not invent another plan.", phase: 3,
+    default: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
+    fallback_2: { launcher: "codex", model: "gpt-6.1-terra", effort: "medium" },
   },
   {
-    key: "judge",
-    label: "Judge",
-    why: "Merges A, B and the gaps into one self-sufficient final plan. This is what gets built.",
-    phase: 4,
-    default: { launcher: "opencode", model: "opencode/glm-5.3" },
-    fallback: { launcher: "claude", model: "claude-opus-5" },
+    key: "judge", label: "Judge",
+    why: "Strong synthesis and explicit risk decisions; no product edits.", phase: 4,
+    default: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
+    fallback: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback_2: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
   },
   {
-    key: "implementer",
-    label: "Implementer",
-    why: "The only worker allowed to touch product files. Follows the approved plan literally.",
-    phase: 6,
-    // Explicit on purpose. Left as "whatever opencode defaults to", its family cannot be
-    // resolved, and the rule that no reviewer may share the implementer's family silently
-    // stops being checked — in the pack most people run.
-    default: { launcher: "opencode", model: "opencode/kimi-k3" },
-    fallback: { launcher: "claude", model: "claude-fable-5-1", effort: "medium" },
+    key: "implementer", label: "Implementer",
+    why: "Only product writer; follows the approved plan and creates checkpoints.", phase: 6,
+    default: { launcher: "codex", model: "gpt-6.1-terra", effort: "medium" },
+    fallback: { launcher: "opencode", model: "opencode/deepseek-v4.1-flash" },
+    fallback_2: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
   },
   {
-    key: "review_light_1",
-    label: "Light review 1",
-    why: "Cheap pass: naming, duplication, dead code, debug leftovers, stray diff.",
-    phase: 8,
-    default: { launcher: "claude", model: "claude-fable-5-1", effort: "low" },
-    fallback: null,
+    key: "review_ui", label: "UI/UX critic",
+    why: "Accessibility, states, interaction, responsive layout; requires UI evidence.", phase: 8,
+    default: { launcher: "claude", model: "claude-haiku-5-5", effort: "low" },
+    fallback: { launcher: "claude", model: "claude-sonnet-5-5", effort: "low" },
+    fallback_2: { launcher: "claude", model: "claude-opus-5-5", effort: "low" },
   },
   {
-    key: "review_light_2",
-    label: "Light review 2",
-    why: "Second cheap pass from another model: consistency, docs, changelog, sanity check.",
-    phase: 8,
-    default: { launcher: "claude", model: "claude-opus-4-8" },
-    fallback: null,
+    key: "review_performance", label: "Stability and performance critic",
+    why: "Failure recovery, resource bounds, concurrency and measured performance.", phase: 8,
+    default: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
+    fallback: { launcher: "codex", model: "gpt-6.1-terra", effort: "medium" },
+    fallback_2: { launcher: "codex", model: "gpt-6-sol", effort: "medium" },
   },
   {
-    key: "review_deep",
-    label: "Deep review",
-    why: "Runs on risky diffs: security, correctness, edge cases, concurrency, test quality.",
-    phase: 8,
-    default: { launcher: "claude", model: "claude-fable-5-1", effort: "medium" },
-    fallback: null,
+    key: "review_architecture", label: "Architecture critic",
+    why: "Boundaries, coupling, compatibility, migrations and unnecessary complexity.", phase: 8,
+    default: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
+    fallback_2: { launcher: "claude", model: "claude-haiku-5-5", effort: "medium" },
   },
   {
-    key: "review_adversarial",
-    label: "Adversarial review",
-    why: "Auth, crypto, payments, migrations. Must be a family none of the other reviewers used.",
-    phase: 8,
-    default: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
-    fallback: { launcher: "opencode", model: "opencode/glm-5.3" },
+    key: "review_security", label: "Security critic",
+    why: "Trust boundaries, authorization, tenant isolation, secrets and injection.", phase: 8,
+    default: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
+    fallback: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback_2: { launcher: "claude", model: "claude-haiku-5-5", effort: "medium" },
   },
   {
-    key: "reader",
-    label: "Reader",
-    why: "Turns machine output — verify logs above all — into something worth a context window. Extracts, never diagnoses.",
+    key: "review_docs", label: "Documentation critic",
+    why: "Public behavior, configuration, examples, migration notes and changelog.", phase: 8,
+    default: { launcher: "claude", model: "claude-haiku-5-5", effort: "low" },
+    fallback: { launcher: "claude", model: "claude-sonnet-5-5", effort: "low" },
+    fallback_2: { launcher: "opencode", model: "opencode/gemini-3.8-flash" },
+  },
+  {
+    key: "review_tests", label: "Test critic",
+    why: "Missing regression cases, false-positive tests, negative cases and flaky tests.", phase: 8,
+    default: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
+    fallback: { launcher: "codex", model: "gpt-6.1-terra", effort: "medium" },
+    fallback_2: { launcher: "codex", model: "gpt-6-sol", effort: "medium" },
+  },
+  {
+    key: "review_qa", label: "QA critic",
+    why: "Execute acceptance and negative scenarios; prove observed behavior.", phase: 8,
+    default: { launcher: "claude", model: "claude-haiku-5-5", effort: "low" },
+    fallback: { launcher: "codex", model: "gpt-6-luna", effort: "low" },
+    fallback_2: { launcher: "codex", model: "gpt-6.1-terra", effort: "low" },
+  },
+  {
+    key: "review_final", label: "Review adjudicator",
+    why: "Validate findings, resolve contradictions; cannot silently dismiss evidence.", phase: 8,
+    default: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
+    fallback_2: { launcher: "claude", model: "claude-haiku-5-5", effort: "medium" },
+  },
+  {
+    key: "review_adversarial", label: "Adversarial critic",
+    why: "Always runs last, independently attacks the code before reading other reports.", phase: 8,
+    default: { launcher: "claude", model: "claude-sonnet-5-5", effort: "medium" },
+    fallback: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
+    fallback_2: { launcher: "grok", model: "grok-4.6", effort: "medium" },
+  },
+  {
+    key: "reader", label: "Reader",
+    why: "Extract large logs verbatim with source line ranges; no diagnosis.", phase: 7,
+    default: { launcher: "codex", model: "gpt-6-luna", effort: "low" },
+    fallback: { launcher: "claude", model: "claude-haiku-5-5", effort: "low" },
+    fallback_2: { launcher: "opencode", model: "opencode/glm-5.3-flash" },
     service: true,
-    default: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
-    fallback: { launcher: "claude", model: "claude-fable-5-1", effort: "low" },
+  },
+  {
+    key: "janitor", label: "Environment janitor",
+    why: "Reconcile run-owned temporary resources; clean proven leftovers, preserve other work.",
+    service: true,
+    default: { launcher: "claude", model: "claude-haiku-5-5", effort: "low" },
+    fallback: { launcher: "codex", model: "gpt-6-luna", effort: "low" },
+    fallback_2: { launcher: "opencode", model: "opencode/glm-5.3-flash" },
   },
 ];
 
-/** The nine that carry an opinion. The wizard introduces these as the panel. */
 export const PHASE_ROLES = ROLES.filter((r) => !r.service);
-
-/** Support roles the orchestrator calls on demand rather than at a fixed phase. */
 export const SERVICE_ROLES = ROLES.filter((r) => r.service);
 
-/** Paths whose diffs should always get the deep review. Suggested per ecosystem. */
+/** Paths whose diffs should always get all specialist critics. Suggested per ecosystem. */
 export const DEEP_REVIEW_SUGGESTIONS = [
   "auth*",
   "**/middleware.*",
@@ -234,11 +257,24 @@ const MODEL_FAMILIES = [
  * `opencode-go/glm-5.3` land on the same vendor. This table will always be incomplete —
  * which is why an unresolved family is reported, never silently skipped.
  */
+/** Read known supervised launch fragments without executing shell text. */
+export function choiceFromLaunch(command) {
+  if(typeof command!=="string"||/[;&|$<>`\n\r]/.test(command))return null;
+  const raw=(command.match(/"[^"]*"|'[^']*'|[^\s]+/g)??[]).map(v=>v.replace(/^("|')(.*)\1$/,"$2"));
+  const tokens=raw.flatMap(t=>t.startsWith("--")&&t.includes("=")?[t.slice(0,t.indexOf("=")),t.slice(t.indexOf("=")+1)]:[t]);
+  for(const flag of ["--agent","--model","--effort"])if(tokens.filter(t=>t===flag).length>1)return null;
+  if(tokens.slice(0,3).join(" ")!=="orca orchestration worker-start")return null;
+  const read=flag=>{const i=tokens.indexOf(flag);return i<0?undefined:tokens[i+1];};
+  const launcher=read("--agent"),model=read("--model"),effort=read("--effort");
+  if(!findLauncher(launcher)||!model||!/^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$/.test(model))return null;
+  return {launcher,model,...(effort?{effort}:{})};
+}
+
 export function familyOf(choice) {
   if (!choice) return null;
   if (choice.raw) return null; // a hand-written command: we cannot know, so we do not guess
   const launcher = findLauncher(choice.launcher);
-  if (launcher?.kind === LAUNCHER_KINDS.terminal) {
+  if (choice.launcher === "opencode" || launcher?.kind === LAUNCHER_KINDS.terminal) {
     if (!choice.model) return "unknown";
     const name = choice.model.includes("/") ? choice.model.slice(choice.model.lastIndexOf("/") + 1) : choice.model;
     for (const [pattern, family] of MODEL_FAMILIES) {
@@ -260,7 +296,7 @@ export function checkIndependence(roles) {
   // clean because half of it was unresolvable is the worst outcome this function can have:
   // the owner reads silence as a pass.
   const unresolved = Object.keys(roles).filter(
-    (k) => k !== "reader" && roles[k] && isUnknown(f(k)),
+    (k) => !ROLES.find(role => role.key === k)?.service && roles[k] && isUnknown(f(k)),
   );
   if (unresolved.length) {
     warnings.push(
@@ -270,35 +306,32 @@ export function checkIndependence(roles) {
 
   if (known("plan_a", "plan_b") && f("plan_a") === f("plan_b")) {
     warnings.push(
-      `Plan A and Plan B are both ${f("plan_a")}. Two planners that think alike give you one plan with extra steps, and the judge has nothing to arbitrate.`,
+      `Plan A and Plan B are both ${f("plan_a")}. Use different families to reduce correlated planning assumptions.`,
     );
   }
-  if (known("gaps", "plan_a") && (f("gaps") === f("plan_a") || f("gaps") === f("plan_b"))) {
-    warnings.push(
-      `The gap hunter is ${f("gaps")}, same as a planner. Its job is to see what the planners missed, which it cannot do sharing their priors.`,
-    );
-  }
-  if (known("judge", "plan_a") && (f("judge") === f("plan_a") || f("judge") === f("plan_b"))) {
-    const side = f("judge") === f("plan_a") ? "Plan A" : "Plan B";
-    warnings.push(
-      `The judge is ${f("judge")}, the same family as ${side}. It is asked to arbitrate between the two plans, and it will find the one that reasons like it does more persuasive.`,
-    );
-  }
-  const reviewers = ["review_light_1", "review_light_2", "review_deep", "review_adversarial"];
-  for (const r of reviewers) {
+  // The owner prioritizes native Claude/Codex. Treat family overlap in specialist
+  // roles as correlation to document, not as automatic disqualification. Keep two
+  // independent closure gates opposite the actual implementer.
+  for (const r of ["review_security", "review_final"]) {
     if (known(r, "implementer") && f(r) === f("implementer")) {
-      warnings.push(
-        `${r} shares the implementer's family (${f(r)}). A reviewer from the implementer's family tends to accept its assumptions.`,
-      );
+      warnings.push(`${r} shares the implementer's family (${f(r)}). Security and final adjudication require another family.`);
     }
   }
-  const others = reviewers.filter((r) => r !== "review_adversarial");
-  if (known("review_adversarial") && others.some((r) => known(r) && f(r) === f("review_adversarial"))) {
-    warnings.push(
-      `The adversarial reviewer is ${f("review_adversarial")}, already used by another reviewer. It is the only one asked to assume the rest are wrong.`,
-    );
-  }
   return warnings;
+}
+
+/** Non-blocking correlation notes: enforce blind sessions and evidence, not vendor count. */
+export function correlationNotes(roles) {
+  const family = key => familyOf(roles[key]);
+  const same = (a, b) => roles[a] && roles[b] && !isUnknown(family(a)) && family(a) === family(b);
+  const notes = [];
+  if (same("judge", "plan_a") || same("judge", "plan_b")) notes.push("Judge shares a planner family: anonymize plan authors and compare claims against evidence.");
+  if (same("gaps", "plan_a") || same("gaps", "plan_b")) notes.push("Gap hunter shares a planner family: use a fresh session and require independently traced omissions.");
+  for (const key of Object.keys(roles).filter(k => k.startsWith("review_"))) {
+    if (same(key, "implementer")) notes.push(`${key} shares the implementer family: fresh session, blind initial report and reproducible counterexamples required.`);
+  }
+  if (Object.keys(roles).some(k => k.startsWith("review_") && k !== "review_adversarial" && same(k, "review_adversarial"))) notes.push("Adversarial critic shares another critic's family: record the exception and preserve its independent initial attack before reading reports.");
+  return notes;
 }
 
 /**
@@ -307,10 +340,9 @@ export function checkIndependence(roles) {
  * work is easy to undo and expensive when it is not.
  *
  * Two positions are held across all three packs. The judge is never the cheapest thing in
- * the roster, because it writes the plan that actually gets built — and it never shares a
- * family with a planner, because it would find the plan that reasons like it does more
- * persuasive. And no reviewer shares the implementer's family, because a reviewer that
- * thinks like the implementer approves the implementer.
+ * the roster, because it writes the plan that actually gets built. Native-priority mode permits planner-family
+ * overlap and records it;
+ * security and final adjudication must remain opposite the implementer.
  *
  * `orchestrator` is a recommendation, not a launcher: the orchestrator is whatever session
  * you run the skill from. The skill reads it at step 0 and says something if you are well
@@ -318,46 +350,28 @@ export function checkIndependence(roles) {
  */
 export const ROSTER_PACKS = [
   {
-    id: "budget",
-    label: "Budget",
-    hint: "small, reversible issues — high volume, cheap to be wrong",
-    orchestrator: "a mid-tier model (Fable, Sonnet)",
+    id: "budget", label: "Budget",
+    hint: "low-effort Terra for small reversible work; critical reviewers unchanged",
+    orchestrator: "a frontier model with measured context usage",
     roles: {
-      plan_a: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
-      plan_b: { launcher: "opencode", model: "opencode/glm-5.3" },
-      gaps: { launcher: "opencode", model: "opencode/grok-4.6" },
-      judge: { launcher: "opencode", model: "opencode/kimi-k3" },
-      implementer: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
-      review_light_1: { launcher: "opencode", model: "opencode/glm-5.3" },
-      review_light_2: { launcher: "opencode", model: "opencode/grok-4.6" },
-      review_deep: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
-      review_adversarial: { launcher: "opencode", model: "opencode/kimi-k3" },
-      reader: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
+      plan_b: { launcher: "codex", model: "gpt-6.1-terra", effort: "low" },
+      implementer: { launcher: "codex", model: "gpt-6.1-terra", effort: "low" },
     },
   },
   {
-    id: "balanced",
-    label: "Balanced",
-    hint: "the default — strong planners and judge, cheap hygiene passes",
-    orchestrator: "a frontier model (Opus, Fable)",
-    roles: null, // falls back to each role's own `default`
+    id: "balanced", label: "Balanced",
+    hint: "Cost-aware native roster; Terra implementation; OpenCode economy reserve",
+    orchestrator: "a frontier model with measured context usage",
+    roles: null,
   },
   {
-    id: "frontier",
-    label: "Frontier",
-    hint: "auth, migrations, billing, tenant isolation — being wrong is expensive",
-    orchestrator: "a frontier model (Opus)",
+    id: "frontier", label: "Frontier",
+    hint: "expensive mistakes; stronger planning and implementation",
+    orchestrator: "a frontier model with measured context usage",
     roles: {
-      plan_a: { launcher: "claude", model: "claude-opus-5", effort: "high" },
-      plan_b: { launcher: "codex" },
-      gaps: { launcher: "grok" },
-      judge: { launcher: "opencode", model: "opencode/gemini-3.1-pro" },
-      implementer: { launcher: "codex" },
-      review_light_1: { launcher: "claude", model: "claude-opus-4-8" },
-      review_light_2: { launcher: "opencode", model: "opencode/glm-5.3" },
-      review_deep: { launcher: "claude", model: "claude-opus-5", effort: "high" },
-      review_adversarial: { launcher: "opencode", model: "opencode/kimi-k3" },
-      reader: { launcher: "claude", model: "claude-haiku-4-5", effort: "low" },
+      plan_b: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
+      implementer: { launcher: "codex", model: "gpt-6.1-sol", effort: "medium" },
+      review_docs: { launcher: "claude", model: "claude-opus-5-5", effort: "medium" },
     },
   },
 ];
@@ -365,6 +379,43 @@ export const ROSTER_PACKS = [
 /** The choice a pack makes for a role, falling back to the role's own default. */
 export function packChoice(pack, role) {
   return pack?.roles?.[role.key] ?? role.default;
+}
+
+/** Three ordered, distinct model/launcher choices. Custom primary remains first. */
+export function roleChoices(role, primary = role.default) {
+  const result = [];
+  const seen = new Set();
+  // Effort changes alone are not another availability option.
+  for (const choice of [primary, role.default, role.fallback, role.fallback_2]) {
+    if (!choice) continue;
+    const id = choice.raw ?? `${choice.launcher}:${choice.model ?? ""}`;
+    if (!seen.has(id)) { seen.add(id); result.push(choice); }
+    if (result.length === 3) break;
+  }
+  return result;
+}
+
+/** Verify all generated reserves against the primary roster, not just the primaries. */
+export function resolveRoster(chosen) {
+  const problems=checkIndependence(chosen);
+  if(problems.length)throw new Error(problems.join("\n"));
+  const result={};
+  for(const role of ROLES) {
+    const primary=chosen[role.key]??role.default;
+    const pool=[primary,role.default,role.fallback,role.fallback_2,
+      ...ROLES.flatMap(r=>[r.default,r.fallback,r.fallback_2]),
+      ...LAUNCHERS.flatMap(l=>l.models.map(model=>({launcher:l.id,model,...(l.supportsEffort?{effort:primary.effort??role.default.effort??"medium"}:{})})))];
+    const seen=new Set();result[role.key]=[];
+    for(const candidate of pool) {
+      if(!candidate)continue;
+      const id=candidate.raw??`${candidate.launcher}:${candidate.model??""}`;
+      if(seen.has(id)||checkIndependence({...chosen,[role.key]:candidate}).length)continue;
+      seen.add(id);result[role.key].push(candidate);
+      if(result[role.key].length===3)break;
+    }
+    if(result[role.key].length!==3)throw new Error(`Cannot build three compatible choices for ${role.key}; select a supported explicit model.`);
+  }
+  return result;
 }
 
 export function findPack(id) {

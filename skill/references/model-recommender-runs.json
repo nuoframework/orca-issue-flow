@@ -1,0 +1,79 @@
+[
+  {
+    "id": "critical_all",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 5,
+      "speed": 0,
+      "cost": 0
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=10&speed=0&cost=0&types=general%2Ccoding%2Clow-hallucination&reasoning=true&providers=anthropic%2Cgoogle%2Ckimi%2Copenai%2Cxai%2Czai&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n5\nSpeed\n0\nCost\n0\nIntelligence Focus\nGeneral Intelligence\nCoding\nLow Hallucination\nCapabilities\nReasoning\nProviders\nAnthropic\nGoogle\nKimi\nOpenAI\nSpaceXAI\nZai\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nGemini 4 Carbon (High)\nGoogle\n\t60\t31.1 min\t1M\t$8,240\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n2\nClaude Opus 5.5 (Max, Default Fallback)\nAnthropic\n\t59\t25.3 min\t1M\t$8,910\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n3\nGemini 4 Carbon (Medium)\nGoogle\n\t58\t25.9 min\t1M\t$5,903\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n4\nClaude Opus 5.5 (Xhigh, Default Fallback)\nAnthropic\n\t57\t16.0 min\t1M\t$4,766\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n5\nGPT-6 Astra (Max)\nOpenAI\n\t57\t20.7 min\t1M\t$5,661\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n6\nGPT-6 Astra (Xhigh)\nOpenAI\n\t55\t10.7 min\t1M\t$3,746\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n7\nGPT-6 Astra (High)\nOpenAI\n\t55\t9.4 min\t1M\t$3,204\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n8\nClaude Sonnet 5.5 (Max, Default Fallback)\nAnthropic\n\t55\t31.1 min\t1M\t$7,981\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n9\nGPT-6.1 Sol (Max)\nOpenAI\n\t55\t20.4 min\t1M\t$1,124\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n10\nGemini 4 Carbon (Low)\nGoogle\n\t54\t24.8 min\t1M\t$5,725\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nClaude Opus 5.5 (Max, Default Fallback)\nGPT-6 Astra (Max)\nClaude Sonnet 5.5 (Max, Default Fallback)\nTry it out\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "critical_anthropic",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 5,
+      "speed": 0,
+      "cost": 0
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=10&speed=0&cost=0&types=general%2Ccoding%2Clow-hallucination&reasoning=true&providers=anthropic&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n5\nSpeed\n0\nCost\n0\nIntelligence Focus\nGeneral Intelligence\nCoding\nLow Hallucination\nCapabilities\nReasoning\nProviders\nAnthropic\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nClaude Opus 5.5 (Max, Default Fallback)\nAnthropic\n\t59\t25.3 min\t1M\t$8,910\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n2\nClaude Opus 5.5 (Xhigh, Default Fallback)\nAnthropic\n\t57\t16.0 min\t1M\t$4,766\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n3\nClaude Sonnet 5.5 (Max, Default Fallback)\nAnthropic\n\t55\t31.1 min\t1M\t$7,981\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n4\nClaude Opus 5.5 (High, Default Fallback)\nAnthropic\n\t52\t9.5 min\t1M\t$2,716\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n5\nClaude Fable 5.1 (Xhigh, Default Fallback)\nAnthropic\n\t50\t18.5 min\t1M\t$10,097\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n6\nClaude Sonnet 5.5 (Xhigh, Default Fallback)\nAnthropic\n\t50\t15.2 min\t1M\t$2,903\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n7\nClaude Fable 5.1 (Max, Default Fallback)\nAnthropic\n\t49\t22.6 min\t1M\t$13,327\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n8\nClaude Opus 5.5 (Medium, Default Fallback)\nAnthropic\n\t48\t7.0 min\t1M\t$2,031\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n9\nClaude Fable 5.1 (High, Default Fallback)\nAnthropic\n\t47\t12.7 min\t1M\t$6,618\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n10\nClaude Fable 5.1 (Medium, Default Fallback)\nAnthropic\n\t43\t9.3 min\t1M\t$4,897\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nClaude Opus 5.5 (Max, Default Fallback)\nClaude Sonnet 5.5 (Max, Default Fallback)\nClaude Fable 5.1 (Max, Default Fallback)\nTry it out\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "coding_openai",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 5,
+      "speed": 1,
+      "cost": 2
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=10&cost=4&types=general%2Ccoding&reasoning=true&providers=openai&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n5\nSpeed\n1\nCost\n2\nIntelligence Focus\nGeneral Intelligence\nCoding\nCapabilities\nReasoning\nProviders\nOpenAI\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nGPT-6.1 Sol (Max)\nOpenAI\n\t55\t20.4 min\t1M\t$1,124\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n2\nGPT-6 Astra (Max)\nOpenAI\n\t57\t20.7 min\t1M\t$5,661\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n3\nGPT-6 Astra (Xhigh)\nOpenAI\n\t55\t10.7 min\t1M\t$3,746\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n4\nGPT-6 Astra (High)\nOpenAI\n\t55\t9.4 min\t1M\t$3,204\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n5\nGPT-6.1 Sol (Xhigh)\nOpenAI\n\t52\t9.3 min\t1M\t$718\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n6\nGPT-6.1 Sol (High)\nOpenAI\n\t50\t6.5 min\t1M\t$573\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n7\nGPT-6.1 Terra (Max)\nOpenAI\n\t51\t13.5 min\t1M\t$972\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n8\nGPT-6 Astra (Medium)\nOpenAI\n\t52\t6.6 min\t1M\t$2,638\t$10.00/1M\t$50.00/1M\t\nModel\nProviders\n\n\n9\nGPT-6.1 Sol (Medium)\nOpenAI\n\t46\t3.8 min\t1M\t$389\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n10\nGPT-6.1 Terra (Xhigh)\nOpenAI\n\t45\t6.1 min\t1M\t$400\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nGPT-6.1 Sol (Max)\nGPT-6 Astra (Max)\nTry it out\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "coding_google",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 5,
+      "speed": 1,
+      "cost": 2
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=10&cost=4&types=general%2Ccoding&reasoning=true&providers=google&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n5\nSpeed\n1\nCost\n2\nIntelligence Focus\nGeneral Intelligence\nCoding\nCapabilities\nReasoning\nProviders\nGoogle\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nGemini 4 Carbon (High)\nGoogle\n\t60\t31.1 min\t1M\t$8,240\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n2\nClaude Opus 5.5 (Max, Default Fallback)\nAnthropic\n\t59\t25.3 min\t1M\t$8,910\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n3\nGemini 4 Carbon (Medium)\nGoogle\n\t58\t25.9 min\t1M\t$5,903\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n4\nGemini 4 Carbon (Low)\nGoogle\n\t54\t24.8 min\t1M\t$5,725\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n5\nClaude Sonnet 5.5 (Max, Default Fallback)\nAnthropic\n\t55\t31.1 min\t1M\t$7,981\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n6\nGemini 4 Argon (High)\nGoogle\n\t50\t27.5 min\t1M\t$7,620\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n7\nClaude Opus 5.5 (Low, Default Fallback)\nAnthropic\n\t35\t3.0 min\t1M\t$980\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n8\nClaude Sonnet 5.5 (Low, Default Fallback)\nAnthropic\n\t26\t2.7 min\t1M\t$499\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n9\nGemini 3.8 Flash (High)\nGoogle\n\t31\t14.8 min\t1M\t$5,764\t$0.750/1M\t$3.75/1M\t\nModel\nProviders\n\n\n10\nGemini 3.8 Flash (Medium)\nGoogle\n\t30\t12.0 min\t1M\t$4,547\t$0.750/1M\t$3.75/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nClaude Opus 5.5 (Max, Default Fallback)\nClaude Sonnet 5.5 (Max, Default Fallback)\nGemini 4 Argon (High)\nTry it out\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "independent_attack",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 5,
+      "speed": 0,
+      "cost": 0
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=10&speed=0&cost=0&types=general%2Ccoding%2Clow-hallucination&reasoning=true&providers=kimi%2Cxai%2Czai&step=results",
+    "visible_result": "Recommended Models\n\nTop 7 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n5\nSpeed\n0\nCost\n0\nIntelligence Focus\nGeneral Intelligence\nCoding\nLow Hallucination\nCapabilities\nReasoning\nProviders\nKimi\nSpaceXAI\nZai\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nKimi K3.1 Pro\nKimi\n\t46\t36.7 min\t1M\t$3,153\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n2\nGrok 4.7 (Xhigh)\nSpaceXAI\n\t35\t24.8 min\t500k\t$5,906\t$2.00/1M\t$6.00/1M\t\nModel\nProviders\n\n\n3\nGrok 4.7 (High)\nSpaceXAI\n\t35\t20.4 min\t500k\t$4,722\t$2.00/1M\t$6.00/1M\t\nModel\nProviders\n\n\n4\nGLM-5.3 (Max)\nZ AI\n\t32\t29.9 min\t1M\t$3,496\t$1.40/1M\t$4.40/1M\t\nModel\nProviders\n\n\n5\nGrok 4.7 (Low)\nSpaceXAI\n\t31\t9.9 min\t500k\t$2,169\t$2.00/1M\t$6.00/1M\t\nModel\nProviders\n\n\n6\nGLM-5.3-Flash\nZ AI\n\t28\t41.3 min\t1M\t$378\t$0.150/1M\t$0.500/1M\t\nModel\nProviders\n\n\n7\nGLM-5.3 (Low)\nZ AI\n\t23\t17.3 min\t1M\t$1,219\t$1.40/1M\t$4.40/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nGrok 4.7 (Xhigh)\nGLM-5.3 (Max)\nGLM-5.3-Flash\nTry it out\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "reader",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 1,
+      "speed": 3,
+      "cost": 5
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=2&speed=6&cost=10&types=instruction-following%2Clow-hallucination&providers=anthropic%2Copenai%2Czai&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n1\nSpeed\n3\nCost\n5\nIntelligence Focus\nInstruction Following\nLow Hallucination\nProviders\nAnthropic\nOpenAI\nZai\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nGPT-6 Luna (Low)\nOpenAI\n\t10\t0.6 min\t1M\t$9\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n2\nClaude Haiku 5.5 (Low)\nAnthropic\n\t19\t2.2 min\t1M\t$40\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n3\nGPT-6.1 Terra (Low)\nOpenAI\n\t29\t1.1 min\t1M\t$111\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n4\nGPT-6 Luna (Non-reasoning)\nOpenAI\n\t9\t2.0 min\t1M\t$53\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n5\nGPT-6 Luna (Medium)\nOpenAI\n\t18\t3.4 min\t1M\t$40\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n6\nClaude Haiku 5.5 (Medium)\nAnthropic\n\t25\t4.2 min\t1M\t$73\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n7\nGPT-6.1 Sol (Low)\nOpenAI\n\t35\t1.8 min\t1M\t$238\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n8\nGPT-6 Luna (High)\nOpenAI\n\t21\t5.7 min\t1M\t$63\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n9\nGPT-6.1 Terra (Medium)\nOpenAI\n\t38\t2.6 min\t1M\t$190\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\n\n\n10\nGPT-6.1 Terra (Non-reasoning)\nOpenAI\n\t31\t2.2 min\t1M\t$213\t$1.00/1M\t$5.00/1M\t\nModel\nProviders\nAdjust\nStart Over\n\n"
+  },
+  {
+    "id": "documentation",
+    "observed_on": "2026-11-08",
+    "sliders": {
+      "intelligence": 3,
+      "speed": 1,
+      "cost": 3
+    },
+    "url": "https://artificialanalysis.ai/models/recommend?intelligence=6&cost=6&types=document-creation%2Cinstruction-following%2Clow-hallucination&providers=anthropic&step=results",
+    "visible_result": "Recommended Models\n\nTop 10 shortlisted models based on priorities\n\nArtificial Analysis\nCriteria\nIntelligence\n3\nSpeed\n1\nCost\n3\nIntelligence Focus\nDocument Creation\nInstruction Following\nLow Hallucination\nProviders\nAnthropic\nTop Recommendations\nModel\tIntelligence\tTime per Task\tContext\tIndex Cost\tInput Price\tOutput Price\t\n\n1\nClaude Haiku 5.5 (Max)\nAnthropic\n\t36\t16.7 min\t1M\t$339\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n2\nClaude Haiku 5.5 (Xhigh)\nAnthropic\n\t35\t9.8 min\t1M\t$193\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n3\nClaude Haiku 5.5 (High)\nAnthropic\n\t30\t6.5 min\t1M\t$121\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n4\nClaude Haiku 5.5 (Medium)\nAnthropic\n\t25\t4.2 min\t1M\t$73\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n5\nClaude Opus 5.5 (Xhigh, Default Fallback)\nAnthropic\n\t57\t16.0 min\t1M\t$4,766\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n6\nClaude Haiku 5.5 (Low)\nAnthropic\n\t19\t2.2 min\t1M\t$40\t$0.100/1M\t$0.500/1M\t\nModel\nProviders\n\n\n7\nClaude Opus 5.5 (High, Default Fallback)\nAnthropic\n\t52\t9.5 min\t1M\t$2,716\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\n\n8\nClaude Sonnet 5.5 (Xhigh, Default Fallback)\nAnthropic\n\t50\t15.2 min\t1M\t$2,903\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n9\nClaude Sonnet 5.5 (High, Default Fallback)\nAnthropic\n\t42\t7.0 min\t1M\t$1,268\t$2.00/1M\t$10.00/1M\t\nModel\nProviders\n\n\n10\nClaude Opus 5.5 (Max, Default Fallback)\nAnthropic\n\t59\t25.3 min\t1M\t$8,910\t$4.00/1M\t$20.00/1M\t\nModel\nProviders\n\nTest these models on your own prompts and compare answers side by side\n\nClaude Haiku 5.5 (Max)\nClaude Opus 5.5 (Max, Default Fallback)\nTry it out\nAdjust\nStart Over\n\n"
+  }
+]

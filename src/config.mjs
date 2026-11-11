@@ -1,13 +1,15 @@
+import { reviewSettings } from "../skill/scripts/review-batches.mjs";
+
 /**
- * .orca-flow.yml writer. Hand-rolled so the package stays at two dependencies and the
- * output keeps its comments — the file is meant to be edited by hand afterwards.
+ * .orca-flow.yml writer. New configuration keeps explanatory comments; YAML-aware
+ * migration preserves owner settings and comments in existing documents.
  */
 
 const needsQuotes = (s) =>
   s === "" ||
   /^[\s]|[\s]$/.test(s) ||
   /^[-?:,\[\]{}#&*!|>'"%@`]/.test(s) ||
-  /:\s/.test(s) ||
+  /[:\n\r\t]/.test(s) ||
   /\s#/.test(s) ||
   /^(true|false|null|yes|no|on|off|~)$/i.test(s) ||
   /^-?\d+(\.\d+)?$/.test(s);
@@ -15,7 +17,7 @@ const needsQuotes = (s) =>
 export function yamlString(value) {
   const s = String(value);
   if (!needsQuotes(s)) return s;
-  return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  return JSON.stringify(s);
 }
 
 function list(items, indent) {
@@ -29,9 +31,11 @@ export function renderConfig(cfg) {
   L.push("# https://github.com/nuoframework/orca-issue-flow");
   L.push("#");
   L.push("# The skill reads this file at the start of every run. Edit it freely: change a");
-  L.push("# model, swap an agent, add a path that must trigger the deep review. Re-run");
+  L.push("# model, swap an agent, add a path that must trigger all specialists. Re-run");
   L.push("# `npx orca-issue-flow` to redo the wizard.");
   L.push("");
+  L.push("schema_version: 2");
+  L.push(`skill_directories:${list(cfg.skill_directories??[".agents/skills"], "  ")}`);
   L.push("# --- Repository -----------------------------------------------------------");
   L.push("");
   L.push("# Branch every issue worktree is cut from, and the PR base.");
@@ -59,7 +63,7 @@ export function renderConfig(cfg) {
   L.push("# start it. The skill reads this at step 0 and says something once if you are");
   L.push("# driving twelve phases from a small model. `orca-issue-flow roles` never touches");
   L.push("# this line — it tells you what the new pack would suggest and leaves the choice.");
-  L.push(`orchestrator: ${yamlString(cfg.orchestrator ?? "a frontier model (Opus, Fable)")}`);
+  L.push(`orchestrator: ${yamlString(cfg.orchestrator ?? "a frontier model with measured context usage")}`);
   L.push("");
   L.push("# --- Gates ----------------------------------------------------------------");
   L.push("");
@@ -67,7 +71,7 @@ export function renderConfig(cfg) {
   L.push("verify:");
   L.push(`  command: ${yamlString(cfg.verify.command)}`);
   if (cfg.verify.ui_command) {
-    L.push("  # Run instead of the above when the diff touches UI.");
+    L.push("  # Run in addition to the above when the diff touches UI.");
     L.push(`  ui_command: ${yamlString(cfg.verify.ui_command)}`);
   } else {
     L.push("  ui_command: null");
@@ -80,12 +84,21 @@ export function renderConfig(cfg) {
   L.push("# .orca-run/. roles.reader does the extraction.");
   L.push("");
   L.push("context:");
+  const enforcement=cfg.context.enforcement??"enforced";
+  if(!["enforced","instructed"].includes(enforcement))throw new Error("Invalid context enforcement mode");
+  L.push(`  enforcement: ${enforcement}`);
+  L.push("  # 60% is guaranteed only with a verified enforcing runtime adapter.");
+  L.push("  max_window_percent: 60");
+  L.push("  handoff_at_percent: 50");
+  L.push(`  require_measured_usage: ${enforcement === "enforced"}`);
+  L.push("  # Runtime adapter must enforce before every model request; prompts alone cannot.");
+  L.push("  max_tool_output_tokens: 4000");
+  L.push("  max_packet_tokens: 12000");
   L.push("  # Digest the verify log through roles.reader above this many lines.");
-  L.push("  # 0 turns it off and the orchestrator reads the raw log.");
+  L.push("  # 0 disables line routing, but token budgets still bound every read.");
   L.push(`  digest_gate_logs_over: ${cfg.context.digest_gate_logs_over}`);
-  L.push("  # Hand the implementer the raw log once the same failure has survived this");
-  L.push("  # many rounds. Two digests that did not unblock it mean the digest is not");
-  L.push("  # what is in the way.");
+  L.push("  # Request targeted raw excerpts once the same failure has survived this");
+  L.push("  # many rounds. Full logs remain on disk; context limits still apply.");
   L.push(`  raw_log_after_rounds: ${cfg.context.raw_log_after_rounds}`);
   L.push("");
   L.push("# --- Issue tracker --------------------------------------------------------");
@@ -96,37 +109,52 @@ export function renderConfig(cfg) {
   L.push("");
   L.push("# --- Review policy --------------------------------------------------------");
   L.push("");
-  L.push("# A diff touching any of these always gets the deep review, whatever its size.");
+  L.push("# Legacy key: matching paths force all specialists, whatever the diff size.");
   L.push(`deep_review_paths:${list(cfg.deep_review_paths, "  ")}`);
   L.push("# ...and so does any diff bigger than this many changed lines.");
   L.push(`deep_review_lines: ${cfg.deep_review_lines}`);
   L.push("");
-  L.push("# Subjects that additionally earn the adversarial reviewer.");
+  L.push("# Subjects requiring an expanded adversarial threat matrix (the critic always runs).");
   L.push(`adversarial_topics:${list(cfg.adversarial_topics, "  ")}`);
   L.push("");
   L.push("# Fix rounds before the orchestrator stops and escalates to you.");
   L.push(`max_review_rounds: ${cfg.max_review_rounds}`);
+  L.push("review_policy:");
+  L.push("  mode: critical_specialists");
+  L.push("  family_policy: native_priority");
+  L.push("  adversarial: always");
+  const review = reviewSettings(cfg.review_policy);
+  L.push(`  execution: ${review.execution}`);
+  L.push(`  max_parallel: ${review.max_parallel ?? "null"}`);
+  L.push("  require_evidence: true");
+  L.push("");
+  L.push("# Cleanup only run-owned ephemeral resources; preserve unknown/user-kept work.");
+  L.push("cleanup:");
+  L.push("  enabled: true");
+  L.push("  after_each_phase: true");
+  L.push("  on_run_exit: true");
+  L.push("  remove_volumes: false");
   L.push("");
   L.push(renderRolesSection(cfg));
   return L.join("\n");
 }
 
-/** Marks where the roles section starts, so `orca-issue-flow roles` can replace just it. */
+/** Legacy marker retained for readable generated config; patches use YAML node ranges. */
 export const ROLES_SECTION_MARKER =
   "# --- Roles ----------------------------------------------------------------";
 
 /**
- * Always last in the file, and always rendered by this one function — that is what lets
- * `orca-issue-flow roles` rewrite the roster without touching a single hand edit above it.
+ * Generate the roles mapping. The patcher preserves surrounding bytes even when owners
+ * append more top-level settings after this mapping.
  */
 export function renderRolesSection(cfg) {
   const L = [];
   L.push(ROLES_SECTION_MARKER);
   L.push("#");
   L.push("# `launch` is the command the orchestrator runs; it appends --task/--worktree/--json.");
-  L.push("# `fallback` is used when a model reports being at capacity or over its limit.");
+  L.push("# Three ordered choices: launch, fallback, fallback_2; preflight each before use.");
   L.push("# What matters is that the roles stay independent: two planners that think alike");
-  L.push("# produce one plan, and a reviewer sharing the implementer's family finds nothing.");
+  L.push("# produce one plan, and model diversity reduces correlated assumptions; evidence still decides.");
   L.push("#");
   L.push("# Re-pick this roster any time with `npx orca-issue-flow roles`. It rewrites this");
   L.push("# section only and leaves everything above untouched.");
@@ -137,6 +165,7 @@ export function renderRolesSection(cfg) {
     L.push(`    label: ${yamlString(role.label)}`);
     L.push(`    launch: ${yamlString(role.launch)}`);
     L.push(`    fallback: ${role.fallback ? yamlString(role.fallback) : "null"}`);
+    L.push(`    fallback_2: ${role.fallback_2 ? yamlString(role.fallback_2) : "null"}`);
   }
   L.push("");
   return L.join("\n");

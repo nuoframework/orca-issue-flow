@@ -4,8 +4,12 @@ import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
 import c from "picocolors";
 
-import { ROLES_SECTION_MARKER, renderConfig, renderRolesSection } from "./config.mjs";
+import { renderConfig } from "./config.mjs";
 import * as detect from "./detect.mjs";
+import {positiveIntegerOrDefault} from "./validation.mjs";
+import {writeRoles} from "./roles-file.mjs";
+import {skillTargets} from "./upgrade.mjs";
+import {contextMode, readConfig} from "./project-config.mjs";
 import {
   ADVERSARIAL_TOPIC_SUGGESTIONS,
   DEEP_REVIEW_SUGGESTIONS,
@@ -18,10 +22,12 @@ import {
   SERVICE_ROLES,
   buildLaunch,
   checkIndependence,
+  correlationNotes,
   familyOf,
   findLauncher,
   findPack,
   packChoice,
+  resolveRoster,
 } from "./presets.mjs";
 
 const PKG_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -32,7 +38,7 @@ const SKILL_NAME = "orca-issue-flow";
 function guard(value) {
   if (p.isCancel(value)) {
     p.cancel("Nothing was written.");
-    process.exit(0);
+    process.exit(130);
   }
   return value;
 }
@@ -192,7 +198,7 @@ export async function init(options = {}) {
   const deepPaths = splitList(
     guard(
       await p.text({
-        message: "Paths that always earn the deep review (comma separated)",
+        message: "Paths that always require all specialist critics (comma separated)",
         placeholder: DEEP_REVIEW_SUGGESTIONS.join(", "),
         defaultValue: DEEP_REVIEW_SUGGESTIONS.join(", "),
       }),
@@ -210,7 +216,7 @@ export async function init(options = {}) {
   );
   const adversarialTopics = guard(
     await p.multiselect({
-      message: "Subjects that also earn the adversarial reviewer",
+      message: "Subjects requiring expanded adversarial analysis",
       options: ADVERSARIAL_TOPIC_SUGGESTIONS.map((t) => ({ value: t, label: t })),
       initialValues: ADVERSARIAL_TOPIC_SUGGESTIONS.slice(0, 5),
       required: false,
@@ -228,11 +234,37 @@ export async function init(options = {}) {
     ),
   );
 
+  const reviewExecution = guard(await p.select({
+    message: "How should specialist reviews run?",
+    initialValue: "batched",
+    options: [
+      { value: "sequential", label: "One after another", hint: "lowest simultaneous resource use" },
+      { value: "batched", label: "Limited parallel batches", hint: "default: up to 3 specialists" },
+      { value: "parallel", label: "All specialists at once", hint: "fastest wall-clock, highest concurrency" },
+    ],
+  }));
+  const reviewParallel = reviewExecution === "batched" ? Number(guard(await p.text({
+    message: "Maximum simultaneous specialist reviewers",
+    placeholder: "3",
+    defaultValue: "3",
+    validate: positiveIntegerOrDefault,
+  }))) : reviewExecution === "sequential" ? 1 : null;
+
+  const enforcement = contextMode(options.enforcement ?? guard(await p.select({
+    message: "How should the 60% context target be applied?",
+    initialValue: "enforced",
+    options: [
+      {value:"enforced", label:"Strict enforcement", hint:"requires a pre-request adapter; unsupported runtimes stop"},
+      {value:"instructed", label:"Instructed target only", hint:"explicit opt-in; NOT a guaranteed 60% limit"},
+    ],
+  })));
+  if(enforcement === "instructed")p.log.warn("The 60% limit will NOT be guaranteed. Both owner gates and delivery must disclose this mode.");
+
   // ---------------------------------------------------------------- roles
   p.log.step(c.bold("Roles"));
   p.log.message(
     c.dim(
-      "Nine roles run the flow. The defaults below are a working roster; what actually\n" +
+      "Specialist roles run the flow. The defaults below are a working roster; what actually\n" +
         "matters is that the two planners, the gap hunter and the reviewers do not all come\n" +
         "from the same model family.",
     ),
@@ -242,7 +274,7 @@ export async function init(options = {}) {
   }
   p.log.message(
     c.dim(
-      "\nPlus a service role that has no opinion and never judges the code:",
+      "\nPlus service roles that have no opinion and never judge the code:",
     ),
   );
   for (const role of SERVICE_ROLES) {
@@ -262,14 +294,16 @@ export async function init(options = {}) {
     language: language.trim() || "English",
     orchestrator,
     verify: { command: verifyCommand, ui_command: uiCommand },
-    context: { digest_gate_logs_over: 200, raw_log_after_rounds: 2 },
+    context: { enforcement, digest_gate_logs_over: 200, raw_log_after_rounds: 2 },
     tracker,
     issue_prefix: issuePrefix,
     deep_review_paths: deepPaths,
     deep_review_lines: deepLines,
     adversarial_topics: adversarialTopics,
     max_review_rounds: maxRounds,
+    review_policy: { execution: reviewExecution, max_parallel: reviewParallel },
     roles,
+    skill_directories: [skillsPath],
   };
 
   const configPath = join(root, CONFIG_NAME);
@@ -327,7 +361,8 @@ export async function init(options = {}) {
  * Returns where the skill landed and whether .gitignore had to be touched.
  */
 export function applyInstall(root, cfg, skillsPath, skillName = SKILL_NAME) {
-  writeFileSync(join(root, CONFIG_NAME), renderConfig(cfg), "utf8");
+  const rendered=renderConfig({...cfg,skill_directories:cfg.skill_directories??[skillsPath]});
+  writeFileSync(join(root, CONFIG_NAME), rendered, "utf8");
 
   const skillTarget = join(root, skillsPath, skillName);
   mkdirSync(dirname(skillTarget), { recursive: true });
@@ -344,11 +379,11 @@ export function applyInstall(root, cfg, skillsPath, skillName = SKILL_NAME) {
  * than a parse — the config is meant to be hand-edited, and a wizard that regenerates the
  * whole file would silently eat those edits.
  */
-export async function reconfigureRoles(options = {}) {
+export async function reconfigureRoles(options = {}, services = {}) {
   console.log("");
   p.intro(`${c.bgYellow(c.black(" orca-issue-flow "))} ${c.dim("re-pick the roster")}`);
 
-  const root = detect.repoRoot() ?? process.cwd();
+  const root = services.root ?? detect.repoRoot() ?? process.cwd();
   const configPath = join(root, CONFIG_NAME);
   if (!existsSync(configPath)) {
     p.cancel(`No ${CONFIG_NAME} here. Run \`npx orca-issue-flow\` first.`);
@@ -356,23 +391,20 @@ export async function reconfigureRoles(options = {}) {
   }
 
   const current = readFileSync(configPath, "utf8");
-  const cut = current.indexOf(ROLES_SECTION_MARKER);
-  if (cut === -1) {
-    p.log.warn(
-      `The roles section is not where it is expected in ${CONFIG_NAME}.\n` +
-        "Rewriting it in place would risk your edits, so nothing was changed.\n" +
-        "Either restore the section header or re-run the full wizard.",
-    );
-    p.outro(c.dim("Nothing written."));
-    return;
+  const parsed=readConfig(current);
+  const targets=skillTargets(root,current).map(target=>join(target,"SKILL.md")).filter(existsSync);
+  if(parsed.get("schema_version")!==2 || targets.length===0 || targets.some(path=>!readFileSync(path,"utf8").includes("Schema compatibility: 2"))) {
+    throw new Error("Installed skill/config is outdated. Run `orca-issue-flow upgrade` before `roles`; nothing was changed.");
   }
-
+  const currentRoles=parsed.get("roles",true);
+  if(!currentRoles?.items)throw new Error("roles must be a YAML mapping; run upgrade");
   p.log.info(`Current roster in ${c.cyan(CONFIG_NAME)}:`);
-  for (const line of current.slice(cut).split("\n")) {
-    if (/^\s{4}launch:/.test(line)) p.log.message(c.dim("  " + line.trim()));
+  for (const pair of currentRoles.items) {
+    const launch=pair.value?.get?.("launch");
+    if(typeof launch === "string")p.log.message(c.dim("  "+launch));
   }
 
-  const { roles, orchestrator } = await chooseRoster();
+  const { roles, orchestrator } = await (services.chooseRoster ?? chooseRoster)();
 
   if (!options.force) {
     const ok = guard(await p.confirm({ message: "Replace the roles section with this?", initialValue: true }));
@@ -382,12 +414,13 @@ export async function reconfigureRoles(options = {}) {
     }
   }
 
-  writeFileSync(configPath, current.slice(0, cut) + renderRolesSection({ roles }), "utf8");
-  p.log.success(`Rewrote the roles section of ${CONFIG_NAME}. Everything above it is untouched.`);
+  const backup=writeRoles(root,current,roles);
+  p.log.info(`Previous config backed up at ${backup}`);
+  p.log.success(`Rewrote the roles section of ${CONFIG_NAME}. Other configuration sections are untouched.`);
 
   // `orchestrator` lives above the cut, so this command cannot write it without breaking
   // the promise it just made. Report the pack's view and let the owner decide.
-  const declared = current.slice(0, cut).match(/^orchestrator:\s*(.+)$/m)?.[1]?.trim();
+  const declared = current.match(/^orchestrator:\s*(.+)$/m)?.[1]?.trim();
   if (declared && orchestrator && !declared.includes(orchestrator)) {
     p.log.info(
       `This roster suggests ${c.cyan(orchestrator)} at the wheel; ${CONFIG_NAME} still says ` +
@@ -412,7 +445,7 @@ export async function chooseRoster() {
           label: pack.label,
           hint: pack.hint,
         })),
-        { value: "__custom__", label: "Pick the agent and model for each role", hint: "ten questions" },
+        { value: "__custom__", label: "Pick the agent and model for each role", hint: "per-role choices" },
       ],
       initialValue: "balanced",
     }),
@@ -424,32 +457,32 @@ export async function chooseRoster() {
     chosen[role.key] = rosterMode === "__custom__" ? await pickRole(role) : packChoice(pack, role);
   }
 
-  // The flow's whole claim is that the roles do not share blind spots. Say so when they do,
-  // rather than letting the config quietly contradict the README.
   const warnings = checkIndependence(chosen);
-  if (warnings.length) {
-    p.log.warn(
-      [c.bold("This roster overlaps where it costs you something:"), ...warnings.map((w) => `  • ${w}`)].join("\n"),
-    );
-    const keep = guard(
-      await p.confirm({ message: "Keep it anyway?", initialValue: rosterMode !== "__custom__" }),
-    );
-    if (!keep) return chooseRoster();
-  } else {
-    const families = PHASE_ROLES.map((r) => familyOf(chosen[r.key])).filter(
-      (f) => f && !String(f).endsWith(":unknown"),
-    );
-    p.log.success(`Independent roster — ${new Set(families).size} distinct model families across the nine.`);
+  if(warnings.length) {
+    p.log.warn(warnings.join("\n"));
+    p.log.info("Select a supported explicit roster; required family gates cannot be waived by the installer.");
+    return chooseRoster();
   }
+  let chains;
+  try { chains=resolveRoster(chosen); }
+  catch(error) {p.log.warn(error.message);return chooseRoster();}
+  const families=PHASE_ROLES.map(r=>familyOf(chosen[r.key])).filter(Boolean);
+  p.log.success(`Roster and reserves checked — ${new Set(families).size} primary model families. Runtime preflight still checks the actual selected agents.`);
+
+  const notes = correlationNotes(chosen);
+  if (notes.length) p.log.message(c.dim(["Native-priority correlation notes:", ...notes.map(note => `  • ${note}`)].join("\n")));
 
   return {
-    roles: ROLES.map((role) => ({
-      key: role.key,
-      label: role.label,
-      launch: buildLaunch(chosen[role.key]),
-      fallback: buildLaunch(role.fallback),
-    })),
-    orchestrator: pack?.orchestrator ?? "a frontier model (Opus, Fable)",
+    roles: ROLES.map((role) => {
+      const [primary, reserve1, reserve2] = chains[role.key];
+      return {
+        key: role.key, label: role.label,
+        launch: buildLaunch(primary),
+        fallback: buildLaunch(reserve1),
+        fallback_2: buildLaunch(reserve2),
+      };
+    }),
+    orchestrator: pack?.orchestrator ?? "a frontier model with measured context usage",
   };
 }
 
@@ -463,7 +496,7 @@ async function pickRole(role) {
       initialValue: role.default.launcher,
       options: [
         ...LAUNCHERS.map((l) => ({ value: l.id, label: l.label, hint: l.family })),
-        { value: "__raw__", label: "Custom command…" },
+        ...(role.service ? [{ value: "__raw__", label: "Custom service command…" }] : []),
       ],
     }),
   );
@@ -472,8 +505,8 @@ async function pickRole(role) {
     const raw = guard(
       await p.text({
         message: "Full launch command (the orchestrator appends --task/--worktree/--json)",
-        placeholder: 'orca terminal create --command "opencode --model my/model"',
-        validate: (v) => (v?.trim() ? undefined : "Give a command or pick an agent above"),
+        placeholder: "orca orchestration worker-start --agent opencode --model provider/model",
+        validate: (v) => /^orca orchestration worker-start(?:\s|$)/.test(v?.trim() ?? "") ? undefined : "Use a supervised orca orchestration worker-start command",
       }),
     );
     return { raw: raw.trim() };

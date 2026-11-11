@@ -33,7 +33,7 @@
     <text x="41.8" y="386" fill="#94a3b8" xml:space="preserve">  Linear</text>
     <text x="34" y="407" fill="#475569">│</text>
     <text x="34" y="428" fill="#34d399">◇</text>
-    <text x="41.8" y="428" fill="#e2e8f0" xml:space="preserve">  Paths that always earn the deep review</text>
+    <text x="41.8" y="428" fill="#e2e8f0" xml:space="preserve">  Paths requiring every specialist critic</text>
     <text x="34" y="449" fill="#475569">│</text>
     <text x="41.8" y="449" fill="#94a3b8" xml:space="preserve">  auth*, **/migrations/**, **/crypto*</text>
     <text x="34" y="470" fill="#475569">│</text>
